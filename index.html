@@ -29,7 +29,6 @@ body{
   line-height:1.6;
 }
 .shell{max-width:1180px;margin:0 auto;padding:32px 24px 80px;}
-
 /* Header */
 .masthead{
   display:flex;justify-content:space-between;align-items:flex-end;
@@ -47,7 +46,6 @@ body{
   color:var(--ink-soft);margin-bottom:6px;
 }
 .masthead .meta{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);text-align:right;}
-
 /* Tabs */
 .tabs{
   display:flex;gap:4px;margin-bottom:32px;flex-wrap:wrap;
@@ -61,24 +59,20 @@ body{
 }
 .tab-btn:hover{color:var(--ink);}
 .tab-btn.active{color:var(--ink);border-bottom-color:var(--ink);}
-
 .view{display:none;}
 .view.active{display:block;animation:fade .25s ease;}
 @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
-
 .section-label{
   font-family:var(--font-mono);font-size:11px;text-transform:uppercase;
   letter-spacing:0.1em;color:var(--ink-soft);margin:36px 0 14px;
 }
 .section-label:first-child{margin-top:0;}
-
 /* Cards */
 .card-row{display:grid;gap:16px;margin-bottom:8px;}
 .cols-4{grid-template-columns:repeat(4,1fr);}
 .cols-3{grid-template-columns:repeat(3,1fr);}
 .cols-2{grid-template-columns:repeat(2,1fr);}
 @media(max-width:860px){.cols-4{grid-template-columns:repeat(2,1fr);}.cols-3{grid-template-columns:1fr;}.cols-2{grid-template-columns:1fr;}}
-
 .stat-card{
   background:var(--card);border:1px solid var(--line);border-radius:6px;
   padding:18px 20px;
@@ -89,14 +83,12 @@ body{
 .stat-card .value.before{color:var(--before);}
 .stat-card .value.after{color:var(--after);}
 .stat-card .value.gain{color:var(--gain);}
-
 .panel{
   background:var(--card);border:1px solid var(--line);border-radius:6px;
   padding:22px 24px;margin-bottom:24px;
 }
 .panel h3{font-family:var(--font-display);font-size:18px;margin:0 0 16px;}
 .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-
 /* toggle / select */
 .toggle-group{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;}
 .toggle-group button{
@@ -105,7 +97,6 @@ body{
 }
 .toggle-group button.active{background:var(--ink);color:var(--paper);}
 .toggle-group button:not(:last-child){border-right:1px solid var(--line);}
-
 /* table */
 table{width:100%;border-collapse:collapse;font-size:13.5px;}
 th{
@@ -118,7 +109,6 @@ tr:last-child td{border-bottom:none;}
 .rank{font-family:var(--font-mono);font-weight:700;}
 .bar-mini{height:6px;border-radius:3px;background:var(--tag-bg);overflow:hidden;width:100px;}
 .bar-mini span{display:block;height:100%;background:var(--after);}
-
 /* bar chart simple */
 .bar-chart{display:flex;flex-direction:column;gap:10px;}
 .bar-row{display:flex;align-items:center;gap:12px;}
@@ -127,7 +117,6 @@ tr:last-child td{border-bottom:none;}
 .bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-family:var(--font-mono);font-size:12px;transition:width .6s ease;}
 .bar-fill.before{background:var(--before);}
 .bar-fill.after{background:var(--after);}
-
 /* book record list */
 .book-record{
   border:1px solid var(--line);border-radius:6px;margin-bottom:10px;overflow:hidden;
@@ -154,7 +143,6 @@ tr:last-child td{border-bottom:none;}
   display:inline-block;font-family:var(--font-mono);font-size:11px;
   background:var(--tag-bg);padding:3px 8px;border-radius:10px;margin:2px 4px 0 0;color:var(--ink-soft);
 }
-
 /* state machine diagram */
 .fsm{display:flex;flex-wrap:wrap;gap:0;align-items:center;justify-content:center;padding:24px 0;}
 .fsm-node{
@@ -165,7 +153,6 @@ tr:last-child td{border-bottom:none;}
 .fsm-node.end{background:var(--after);color:#fff;border-color:var(--after);}
 .fsm-node.skip{border-style:dashed;color:var(--ink-soft);}
 .fsm-arrow{font-family:var(--font-mono);color:var(--ink-soft);padding:0 8px;font-size:13px;}
-
 .badge{
   display:inline-block;font-family:var(--font-mono);font-size:11px;
   padding:2px 8px;border-radius:10px;
@@ -173,17 +160,52 @@ tr:last-child td{border-bottom:none;}
 .badge.green{background:#E2F1EE;color:var(--after);}
 .badge.gray{background:var(--tag-bg);color:var(--ink-soft);}
 .badge.orange{background:#FBE9E2;color:var(--gain);}
-
 .note{
   font-size:12.5px;color:var(--ink-soft);background:#F6F3EC;border-left:3px solid var(--ink-soft);
   padding:8px 12px;border-radius:2px;margin-top:10px;
 }
 canvas{max-width:100%;}
+
+/* ---- 閱讀測驗 quiz styles (整合進原本配色系統) ---- */
+.quiz-video-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:13px;color:var(--after);
+  text-decoration:none;border:1px solid var(--line);border-radius:5px;
+  padding:8px 14px;background:var(--card);
+}
+.quiz-video-link:hover{background:#F6F3EC;}
+.quiz-name-input{
+  width:100%;max-width:320px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:5px;font-family:var(--font-body);font-size:14px;background:var(--paper);
+  color:var(--ink);
+}
+.quiz-question{
+  border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin-bottom:14px;background:var(--card);
+}
+.quiz-question p{margin:0 0 10px;font-weight:700;font-size:14.5px;}
+.quiz-opt{
+  display:flex;align-items:flex-start;gap:8px;font-size:13.5px;
+  padding:7px 4px;cursor:pointer;color:var(--ink-soft);border-radius:4px;
+}
+.quiz-opt:hover{background:#F6F3EC;color:var(--ink);}
+.quiz-opt input{margin-top:3px;}
+.quiz-submit-btn{
+  font-family:var(--font-mono);font-size:13px;font-weight:600;
+  padding:10px 22px;background:var(--ink);color:var(--paper);
+  border:none;border-radius:5px;cursor:pointer;margin-top:6px;
+}
+.quiz-submit-btn:hover{opacity:0.85;}
+.quiz-reset-btn{
+  font-family:var(--font-mono);font-size:13px;
+  padding:10px 18px;background:var(--card);color:var(--ink-soft);
+  border:1px solid var(--line);border-radius:5px;cursor:pointer;margin-top:6px;margin-left:10px;
+}
+.quiz-reset-btn:hover{background:#F6F3EC;}
+.quiz-result{display:none;}
 </style>
 </head>
 <body>
 <div class="shell">
-
   <div class="masthead">
     <div>
       <div class="eyebrow">課前測驗功能原型 · Pre-test Prototype</div>
@@ -191,7 +213,6 @@ canvas{max-width:100%;}
     </div>
     <div class="meta">規格版本 v1.0 草案<br>模擬資料・前端展示用</div>
   </div>
-
   <div class="tabs">
     <button class="tab-btn active" data-view="teacher">教師 Dashboard</button>
     <button class="tab-btn" data-view="home">首頁 Dashboard</button>
@@ -199,8 +220,8 @@ canvas{max-width:100%;}
     <button class="tab-btn" data-view="admin">管理者 Dashboard</button>
     <button class="tab-btn" data-view="charts">圖表分析</button>
     <button class="tab-btn" data-view="flow">流程與狀態機</button>
+    <button class="tab-btn" data-view="quiz">閱讀測驗</button>
   </div>
-
   <!-- ============ 教師 Dashboard ============ -->
   <div class="view active" id="view-teacher">
     <div class="section-label">學習卡片</div>
@@ -210,14 +231,12 @@ canvas{max-width:100%;}
       <div class="stat-card"><div class="label">📝 已完成課前測驗</div><div class="value">30 份</div></div>
       <div class="stat-card"><div class="label">✅ 已完成課後測驗</div><div class="value">28 份</div></div>
     </div>
-
     <div class="section-label">統計卡片</div>
     <div class="card-row cols-3">
       <div class="stat-card"><div class="label">平均課前</div><div class="value before">70 分</div></div>
       <div class="stat-card"><div class="label">平均課後</div><div class="value after">91 分</div></div>
       <div class="stat-card"><div class="label">平均進步</div><div class="value gain">+21 分</div><div class="sub">已排除 skipped / not_required 紀錄</div></div>
     </div>
-
     <div class="panel">
       <h3>近期待辦</h3>
       <table>
@@ -230,7 +249,6 @@ canvas{max-width:100%;}
       </table>
     </div>
   </div>
-
   <!-- ============ 首頁 Dashboard ============ -->
   <div class="view" id="view-home">
     <div class="section-label">課前測驗統計卡片</div>
@@ -239,7 +257,6 @@ canvas{max-width:100%;}
       <div class="stat-card"><div class="label">未完成</div><div class="value">15</div></div>
       <div class="stat-card"><div class="label">平均分</div><div class="value before">68 分</div></div>
     </div>
-
     <div class="section-label">學習成長分析</div>
     <div class="card-row cols-3">
       <div class="stat-card"><div class="label">平均課前</div><div class="value before">68 分</div></div>
@@ -253,13 +270,11 @@ canvas{max-width:100%;}
     </div>
     <div class="note">計算範圍已排除 <code>skipped</code> 與 <code>not_required</code> 狀態的紀錄，避免無課前基準的資料影響平均值。</div>
   </div>
-
   <!-- ============ 個人學習紀錄 ============ -->
   <div class="view" id="view-record">
     <div class="section-label">每本書學習紀錄（點選展開作答內容）</div>
     <div id="book-records"></div>
   </div>
-
   <!-- ============ 管理者 Dashboard ============ -->
   <div class="view" id="view-admin">
     <div class="section-label">課前完成率</div>
@@ -267,7 +282,6 @@ canvas{max-width:100%;}
       <div class="stat-card"><div class="label">已完成</div><div class="value after">35 人 (70%)</div></div>
       <div class="stat-card"><div class="label">未完成</div><div class="value">15 人 (30%)</div></div>
     </div>
-
     <div class="panel">
       <div class="panel-head">
         <h3 style="margin:0;">課前平均分數比較</h3>
@@ -279,7 +293,6 @@ canvas{max-width:100%;}
       </div>
       <div class="bar-chart" id="dim-chart"></div>
     </div>
-
     <div class="panel">
       <div class="panel-head">
         <h3 style="margin:0;">學習成長排行榜</h3>
@@ -295,7 +308,6 @@ canvas{max-width:100%;}
       <div class="note">標準化進步率 = 進步分數 ÷ (100 − 課前分數)。課前分數已偏高者，絕對進步分數受天花板效應限制，建議切換檢視兩種排序。</div>
     </div>
   </div>
-
   <!-- ============ 圖表分析 ============ -->
   <div class="view" id="view-charts">
     <div class="panel">
@@ -311,18 +323,15 @@ canvas{max-width:100%;}
         </div>
       </div>
     </div>
-
     <div class="panel">
       <h3>學習成長折線圖（依月份）</h3>
       <canvas id="lineChart" height="90"></canvas>
     </div>
-
     <div class="panel">
       <h3>書籍學習成效</h3>
       <canvas id="bookChart" height="100"></canvas>
     </div>
   </div>
-
   <!-- ============ 流程與狀態機 ============ -->
   <div class="view" id="view-flow">
     <div class="panel">
@@ -347,7 +356,6 @@ canvas{max-width:100%;}
         ⚠ <code>skipped</code> 與 <code>not_required</code> 紀錄不納入學習成效統計，避免分母失真。
       </div>
     </div>
-
     <div class="panel">
       <h3>閱讀流程（書籍層級判斷）</h3>
       <table>
@@ -362,9 +370,39 @@ canvas{max-width:100%;}
       <div class="note">「通過標準」為診斷性質，僅用於顯示基礎程度（低／中／高），不應用來阻擋進入閱讀流程。</div>
     </div>
   </div>
+  <!-- ============ 閱讀測驗 ============ -->
+  <div class="view" id="view-quiz">
+    <div class="panel">
+      <h3>📖 閱讀測驗｜國小補習班 × 非暴力溝通</h3>
+      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-8px;">先觀看影片，再完成下方十題測驗</p>
 
+      <div style="margin-bottom:16px;">
+        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">姓名</label>
+        <input type="text" id="quizName" class="quiz-name-input" placeholder="請輸入姓名">
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">閱讀影片連結</label>
+        <a class="quiz-video-link" href="https://www.youtube.com/watch?v=TboRxGEF-Q4" target="_blank" rel="noopener">▶ 點此前往 YouTube 觀看影片</a>
+      </div>
+
+      <form id="quizForm">
+        <div id="quizQuestions"></div>
+        <button type="submit" class="quiz-submit-btn">送出測驗</button>
+        <button type="button" class="quiz-reset-btn" onclick="resetCumulative()">重設累積分數</button>
+      </form>
+    </div>
+
+    <div class="panel quiz-result" id="quizResult">
+      <h3>測驗結果</h3>
+      <div class="card-row cols-3">
+        <div class="stat-card"><div class="label">答對題數</div><div class="value before" id="quizCorrectCount">-</div></div>
+        <div class="stat-card"><div class="label">本次得分</div><div class="value gain" id="quizThisScore">-</div></div>
+        <div class="stat-card"><div class="label">累積總分</div><div class="value after" id="quizCumScore">-</div></div>
+      </div>
+    </div>
+  </div>
 </div>
-
 <script>
 // ---------- Tab switching ----------
 document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -375,7 +413,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('view-'+btn.dataset.view).classList.add('active');
   });
 });
-
 // ---------- Mock data: 個人學習紀錄 ----------
 const books = [
   {
@@ -412,7 +449,6 @@ const books = [
     ]
   }
 ];
-
 function renderBooks(){
   const wrap = document.getElementById('book-records');
   wrap.innerHTML = books.map((b,i)=>`
@@ -449,7 +485,6 @@ function toggleRecord(i){
   document.getElementById('rec-'+i).classList.toggle('open');
 }
 renderBooks();
-
 // ---------- 管理者 Dashboard: 課前平均分數比較 ----------
 const dimData = {
   dept: [{label:'國文科',pre:75},{label:'數學科',pre:62},{label:'英語科',pre:80},{label:'自然科',pre:58}],
@@ -473,7 +508,6 @@ document.getElementById('dim-toggle').addEventListener('click',e=>{
   renderDimChart(e.target.dataset.dim);
 });
 renderDimChart('dept');
-
 // ---------- 學習成長排行榜 ----------
 const rankData = [
   {name:'王老師',pre:60,post:95},
@@ -511,12 +545,10 @@ document.getElementById('rank-toggle').addEventListener('click',e=>{
   renderRank(e.target.dataset.rank);
 });
 renderRank('abs');
-
 // ---------- Charts (Chart.js) ----------
 const monthLabels = ['1月','2月','3月','4月','5月','6月'];
 const preMonthly = [60,63,65,68,70,68];
 const postMonthly = [85,87,89,90,92,92];
-
 new Chart(document.getElementById('lineChart'), {
   type:'line',
   data:{
@@ -535,7 +567,6 @@ new Chart(document.getElementById('lineChart'), {
     }
   }
 });
-
 const bookLabels = ['評量設計','差異化教學','班級經營','數位學習','正向管教'];
 new Chart(document.getElementById('bookChart'), {
   type:'bar',
@@ -555,6 +586,129 @@ new Chart(document.getElementById('bookChart'), {
     }
   }
 });
+
+// ---------- 閱讀測驗（國小補習班 × 非暴力溝通）----------
+const quizQuestions = [
+  {q:"1. 小華在補習班數學考差了，老師說：「你怎麼又考這麼差，是不是都沒在聽課？」請問用非暴力溝通的方式，老師更適合怎麼說？",
+   opts:[
+     "「你怎麼又考這麼差，是不是都沒在聽課？」",
+     "「我看到這次考卷有不少題目錯了，我有點擔心，是不是哪個觀念還不太懂？我們一起看看好嗎？」",
+     "「再考這麼差，下次就不要來上課了。」",
+     "「全班只有你考不好，要加油一點。」"
+   ], answer:1},
+  {q:"2. 下課時，同學小傑一直插嘴打斷正在發言的小美。小美感到很生氣，用非暴力溝通表達感受時，最適合的說法是？",
+   opts:[
+     "「你很沒禮貌耶，每次都打斷我！」",
+     "「你是不是討厭我才一直打斷我說話？」",
+     "「當你打斷我說話時，我覺得有點難過，因為我也想把話說完，可以等我說完再說嗎？」",
+     "「閉嘴啦，輪到我說了！」"
+   ], answer:2},
+  {q:"3. 阿明因為功課太多覺得壓力很大，跟補習班老師抱怨。老師用非暴力溝通回應，下列何者最恰當？",
+   opts:[
+     "「大家功課都一樣多，不要找藉口。」",
+     "「我聽到你說功課很多，覺得壓力很大，這樣的感覺我能理解，我們一起看看怎麼安排時間，好嗎？」",
+     "「功課多是為你好，你應該要忍耐。」",
+     "「你就是太懶惰才會覺得累。」"
+   ], answer:1},
+  {q:"4. 兩位同學因為搶同一枝筆吵起來，老師想用非暴力溝通幫忙化解，下列何者最適合？",
+   opts:[
+     "「你們兩個都不准用這枝筆了！」",
+     "「是誰先搶的，給我說清楚！」",
+     "「我看到你們兩個都很想用這枝筆，能不能告訴我，你們現在的感受，還有需要這枝筆做什麼呢？」",
+     "「吵架的人都要被處罰。」"
+   ], answer:2},
+  {q:"5. 小芸寫作業時常常分心，媽媽接她下課時很生氣地說了重話。如果媽媽想用非暴力溝通表達，比較適合的說法是？",
+   opts:[
+     "「你又在發呆了，到底要講幾次！」",
+     "「我看到你寫作業常常分心，我有點擔心會影響進度，我們可以一起想想怎麼讓你更專心嗎？」",
+     "「你就是不認真，難怪成績不好。」",
+     "「再分心就不准下課休息。」"
+   ], answer:1},
+  {q:"6. 補習班同學嘲笑小宇字寫得醜，小宇覺得很受傷。用非暴力溝通的方式，小宇可以怎麼表達自己的感受？",
+   opts:[
+     "「你才醜咧！」然後動手推對方",
+     "默默忍耐，什麼都不說",
+     "「當你笑我字寫得醜的時候，我覺得很難過，因為我也很努力在練習，希望你可以不要這樣說。」",
+     "跟其他同學一起排擠對方"
+   ], answer:2},
+  {q:"7. 老師發現小傑沒寫作業，想了解原因而不是直接責罵，下列哪一種問法符合非暴力溝通的精神？",
+   opts:[
+     "「你又沒寫作業，是不是想被處罰？」",
+     "「我注意到你今天沒有交作業，發生了什麼事呢？我想知道是不是有什麼困難。」",
+     "「沒寫作業的人通通留下來補寫，不准休息。」",
+     "「你就是懶，每次都這樣。」"
+   ], answer:1},
+  {q:"8. 小美考試成績進步了，但好朋友小婷因為退步而心情不好。小美想關心小婷，下列哪句話最符合非暴力溝通的「同理」精神？",
+   opts:[
+     "「你看我都進步了，你怎麼還退步？」",
+     "「你是不是都沒在念書？」",
+     "「我看你今天好像不太開心，是不是因為這次考試的關係？想聊聊嗎？」",
+     "「退步又沒關係，不用想太多啦。」（敷衍帶過）"
+   ], answer:2},
+  {q:"9. 補習班下課時間到了，但老師還想多講一點進度，部分同學開始抱怨。老師用非暴力溝通回應同學的需求，下列何者最適當？",
+   opts:[
+     "「不准抱怨，老師說了算！」",
+     "「我知道大家已經累了，也很期待下課，我還有一點點重要的內容想講完，可以再給我五分鐘嗎？」",
+     "「再吵就通通留下來加課。」",
+     "「你們這麼不專心，難怪成績不好。」"
+   ], answer:1},
+  {q:"10. 非暴力溝通強調表達時通常包含「觀察、感受、需要、請求」四個步驟。下列哪一句話最完整地運用了這四個步驟？",
+   opts:[
+     "「你每次都遲到，真的很沒責任感！」",
+     "「我看到你這週有三天遲到（觀察），我有點擔心（感受），因為我希望大家都能順利上到完整的課程（需要），下次可以提早五分鐘出門嗎？（請求）」",
+     "「遲到的人通通要被記點處罰。」",
+     "「反正你本來就常常遲到，不意外。」"
+   ], answer:1},
+];
+
+const quizContainer = document.getElementById("quizQuestions");
+quizQuestions.forEach((item, idx) => {
+  const div = document.createElement("div");
+  div.className = "quiz-question";
+  let optsHtml = item.opts.map((opt, i) => `
+    <label class="quiz-opt">
+      <input type="radio" name="qq${idx}" value="${i}" required>
+      <span>${opt}</span>
+    </label>`).join("");
+  div.innerHTML = `<p>${item.q}</p>${optsHtml}`;
+  quizContainer.appendChild(div);
+});
+
+let quizCumulativeScore = 0;
+
+function correctCountToScore(count){
+  if(count <= 5) return 0;
+  const map = {6:10, 7:20, 8:30, 9:40, 10:50};
+  return map[count] || 0;
+}
+
+document.getElementById("quizForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const name = document.getElementById("quizName").value.trim() || "（未填寫姓名）";
+
+  let correct = 0;
+  quizQuestions.forEach((item, idx) => {
+    const selected = document.querySelector(`input[name="qq${idx}"]:checked`);
+    if(selected && parseInt(selected.value) === item.answer){
+      correct++;
+    }
+  });
+
+  const thisScore = correctCountToScore(correct);
+  quizCumulativeScore += thisScore;
+
+  document.getElementById("quizCorrectCount").textContent = `${correct} / 10`;
+  document.getElementById("quizThisScore").textContent = `${thisScore} 分`;
+  document.getElementById("quizCumScore").textContent = `${quizCumulativeScore} 分（${name}）`;
+  document.getElementById("quizResult").style.display = "block";
+  document.getElementById("quizResult").scrollIntoView({behavior:"smooth"});
+});
+
+function resetCumulative(){
+  quizCumulativeScore = 0;
+  document.getElementById("quizCumScore").textContent = "0 分";
+  alert("累積分數已重設為 0");
+}
 </script>
 </body>
 </html>
