@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>課前測驗功能原型</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{
   --paper:#FAF8F4;
@@ -202,16 +203,64 @@ canvas{max-width:100%;}
 }
 .quiz-reset-btn:hover{background:#F6F3EC;}
 .quiz-result{display:none;}
+
+/* ---- 登入 / 個人資料 ---- */
+.login-gate{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:80px 20px;gap:18px;
+}
+.login-gate h2{font-family:var(--font-display);font-size:24px;margin:0;}
+.login-gate p{color:var(--ink-soft);font-size:14px;max-width:420px;margin:0;}
+.gsi-btn{
+  font-family:var(--font-mono);font-size:14px;font-weight:600;
+  padding:11px 24px;background:var(--ink);color:var(--paper);
+  border:none;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+}
+.gsi-btn:hover{opacity:0.85;}
+.gsi-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.user-chip{
+  display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12.5px;
+  color:var(--ink-soft);
+}
+.user-chip img{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);}
+.logout-link{
+  font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);
+  text-decoration:underline;cursor:pointer;background:none;border:none;padding:0;
+}
+.sync-status{
+  font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);
+  margin-top:10px;display:flex;align-items:center;gap:6px;
+}
+.sync-status.ok{color:var(--after);}
+.sync-status.err{color:var(--gain);}
+.profile-card{display:flex;align-items:center;gap:16px;}
+.profile-card img{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);}
+.profile-card .pname{font-family:var(--font-display);font-size:20px;font-weight:700;}
+.profile-card .pemail{font-size:13px;color:var(--ink-soft);}
+.app-hidden{display:none !important;}
 </style>
 </head>
 <body>
-<div class="shell">
+<!-- ============ 登入畫面 ============ -->
+<div class="login-gate" id="loginGate">
+  <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);">課前測驗功能原型 · Pre-test Prototype</div>
+  <h2>學習成效追蹤系統</h2>
+  <p>請使用 Google 帳號登入。登入後您的姓名、Email 與測驗紀錄將會寫入並保存在指定的 Google 試算表（位於您的 Google Drive）中。</p>
+  <button class="gsi-btn" id="googleLoginBtn">🔐 使用 Google 帳號登入</button>
+  <div class="sync-status" id="loginStatus"></div>
+</div>
+
+<div class="shell app-hidden" id="appShell">
   <div class="masthead">
     <div>
       <div class="eyebrow">課前測驗功能原型 · Pre-test Prototype</div>
       <h1>學習成效追蹤系統</h1>
     </div>
-    <div class="meta">規格版本 v1.0 草案<br>模擬資料・前端展示用</div>
+    <div class="meta" style="text-align:right;">
+      <div class="user-chip" id="userChip" style="justify-content:flex-end;margin-bottom:6px;"></div>
+      規格版本 v1.0 草案・模擬資料<br>
+      <button class="logout-link" id="logoutBtn">登出</button>
+    </div>
   </div>
   <div class="tabs">
     <button class="tab-btn active" data-view="teacher">教師 Dashboard</button>
@@ -221,6 +270,7 @@ canvas{max-width:100%;}
     <button class="tab-btn" data-view="charts">圖表分析</button>
     <button class="tab-btn" data-view="flow">流程與狀態機</button>
     <button class="tab-btn" data-view="quiz">閱讀測驗</button>
+    <button class="tab-btn" data-view="profile">個人資料</button>
   </div>
   <!-- ============ 教師 Dashboard ============ -->
   <div class="view active" id="view-teacher">
@@ -377,8 +427,8 @@ canvas{max-width:100%;}
       <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-8px;">先觀看影片，再完成下方十題測驗</p>
 
       <div style="margin-bottom:16px;">
-        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">姓名</label>
-        <input type="text" id="quizName" class="quiz-name-input" placeholder="請輸入姓名">
+        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">姓名（取自 Google 登入帳號）</label>
+        <div class="quiz-name-input" id="quizNameDisplay" style="display:flex;align-items:center;color:var(--ink-soft);">尚未登入</div>
       </div>
 
       <div style="margin-bottom:22px;">
@@ -400,6 +450,32 @@ canvas{max-width:100%;}
         <div class="stat-card"><div class="label">本次得分</div><div class="value gain" id="quizThisScore">-</div></div>
         <div class="stat-card"><div class="label">累積總分</div><div class="value after" id="quizCumScore">-</div></div>
       </div>
+      <div class="sync-status" id="sheetSyncStatus"></div>
+    </div>
+  </div>
+  <!-- ============ 個人資料 ============ -->
+  <div class="view" id="view-profile">
+    <div class="panel">
+      <h3>個人資料</h3>
+      <div class="profile-card">
+        <img id="profileAvatar" src="" alt="">
+        <div>
+          <div class="pname" id="profileName">-</div>
+          <div class="pemail" id="profileEmail">-</div>
+        </div>
+      </div>
+      <div class="note">此資料來自 Google 帳號登入資訊，姓名、Email 與每次測驗紀錄會即時寫入 Google Drive 中的試算表（試算表 ID 設定於程式碼 <code>SPREADSHEET_ID</code>）。</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3 style="margin:0;">我的測驗紀錄（讀取自 Google 試算表）</h3>
+        <button class="quiz-reset-btn" id="refreshRecordsBtn" style="margin:0;">🔄 重新整理</button>
+      </div>
+      <table>
+        <thead><tr><th>時間</th><th>答對題數</th><th>本次得分</th><th>累積總分</th></tr></thead>
+        <tbody id="profileRecordsBody"><tr><td colspan="4" style="color:var(--ink-soft);">登入後將自動讀取紀錄...</td></tr></tbody>
+      </table>
+      <div class="sync-status" id="profileSyncStatus"></div>
     </div>
   </div>
 </div>
@@ -684,7 +760,11 @@ function correctCountToScore(count){
 
 document.getElementById("quizForm").addEventListener("submit", function(e){
   e.preventDefault();
-  const name = document.getElementById("quizName").value.trim() || "（未填寫姓名）";
+  if(!currentUser){
+    alert("請先使用 Google 帳號登入");
+    return;
+  }
+  const name = currentUser.name;
 
   let correct = 0;
   quizQuestions.forEach((item, idx) => {
@@ -702,13 +782,184 @@ document.getElementById("quizForm").addEventListener("submit", function(e){
   document.getElementById("quizCumScore").textContent = `${quizCumulativeScore} 分（${name}）`;
   document.getElementById("quizResult").style.display = "block";
   document.getElementById("quizResult").scrollIntoView({behavior:"smooth"});
+
+  appendRecordToSheet({
+    timestamp: new Date().toLocaleString('zh-TW'),
+    name: currentUser.name,
+    email: currentUser.email,
+    correct: correct,
+    thisScore: thisScore,
+    cumulativeScore: quizCumulativeScore
+  });
 });
 
 function resetCumulative(){
   quizCumulativeScore = 0;
   document.getElementById("quizCumScore").textContent = "0 分";
-  alert("累積分數已重設為 0");
+  alert("累積分數已重設為 0（注意：Google 試算表中的歷史紀錄不會被刪除）");
 }
+
+/* =======================================================
+   Google 登入 + Google Drive 試算表同步
+   ======================================================= */
+
+// ⚠️ 請在 Google Cloud Console 建立 OAuth 用戶端後，填入以下三項設定：
+// 1. GOOGLE_CLIENT_ID：OAuth 2.0 用戶端 ID（網頁應用程式類型）
+// 2. SPREADSHEET_ID：要寫入的 Google 試算表 ID（網址中 /d/ 與 /edit 之間那段）
+// 3. SHEET_NAME：該試算表中要寫入的工作表名稱（分頁名稱）
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+const SPREADSHEET_ID   = "YOUR_GOOGLE_SHEET_ID";
+const SHEET_NAME        = "個人資料";
+const SHEETS_SCOPE       = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
+
+let currentUser = null;   // {name, email, picture}
+let accessToken = null;   // OAuth access token，用於呼叫 Sheets API
+let tokenClient = null;
+
+function initGoogleAuth(){
+  if(typeof google === "undefined" || !google.accounts){
+    document.getElementById("loginStatus").textContent = "⚠ Google 登入元件載入失敗，請檢查網路連線。";
+    document.getElementById("loginStatus").className = "sync-status err";
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SHEETS_SCOPE,
+    callback: async (resp) => {
+      if(resp.error){
+        document.getElementById("loginStatus").textContent = "登入失敗：" + resp.error;
+        document.getElementById("loginStatus").className = "sync-status err";
+        return;
+      }
+      accessToken = resp.access_token;
+      await fetchUserProfile();
+    }
+  });
+}
+
+async function fetchUserProfile(){
+  try{
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: "Bearer " + accessToken }
+    });
+    const data = await res.json();
+    currentUser = { name: data.name, email: data.email, picture: data.picture };
+    onLoginSuccess();
+  }catch(err){
+    document.getElementById("loginStatus").textContent = "讀取使用者資訊失敗，請重試。";
+    document.getElementById("loginStatus").className = "sync-status err";
+  }
+}
+
+function onLoginSuccess(){
+  document.getElementById("loginGate").classList.add("app-hidden");
+  document.getElementById("appShell").classList.remove("app-hidden");
+
+  document.getElementById("userChip").innerHTML =
+    `<img src="${currentUser.picture}" alt=""><span>${currentUser.name}（${currentUser.email}）</span>`;
+
+  document.getElementById("quizNameDisplay").textContent = currentUser.name;
+
+  document.getElementById("profileAvatar").src = currentUser.picture;
+  document.getElementById("profileName").textContent = currentUser.name;
+  document.getElementById("profileEmail").textContent = currentUser.email;
+
+  loadRecordsFromSheet();
+}
+
+document.getElementById("googleLoginBtn").addEventListener("click", () => {
+  if(!tokenClient){
+    document.getElementById("loginStatus").textContent = "登入元件尚未就緒，請稍後再試。";
+    document.getElementById("loginStatus").className = "sync-status err";
+    return;
+  }
+  if(GOOGLE_CLIENT_ID.startsWith("YOUR_")){
+    document.getElementById("loginStatus").textContent = "⚠ 尚未設定 GOOGLE_CLIENT_ID，請先於程式碼中填入您的 Google OAuth 用戶端 ID。";
+    document.getElementById("loginStatus").className = "sync-status err";
+    return;
+  }
+  tokenClient.requestAccessToken();
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  if(accessToken){
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
+  currentUser = null;
+  accessToken = null;
+  document.getElementById("appShell").classList.add("app-hidden");
+  document.getElementById("loginGate").classList.remove("app-hidden");
+  document.getElementById("loginStatus").textContent = "";
+});
+
+// 將一筆測驗紀錄寫入 Google 試算表（Sheets API v4 - append）
+async function appendRecordToSheet(record){
+  const statusEl = document.getElementById("sheetSyncStatus");
+  if(SPREADSHEET_ID.startsWith("YOUR_")){
+    statusEl.textContent = "⚠ 尚未設定 SPREADSHEET_ID，紀錄僅顯示於畫面上，未寫入 Google 試算表。";
+    statusEl.className = "sync-status err";
+    return;
+  }
+  statusEl.textContent = "同步中...";
+  statusEl.className = "sync-status";
+  try{
+    const range = encodeURIComponent(`${SHEET_NAME}!A:F`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + accessToken,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        values: [[record.timestamp, record.name, record.email, record.correct, record.thisScore, record.cumulativeScore]]
+      })
+    });
+    if(!res.ok){ throw new Error("HTTP " + res.status); }
+    statusEl.textContent = "✅ 已同步至 Google 試算表";
+    statusEl.className = "sync-status ok";
+  }catch(err){
+    statusEl.textContent = "❌ 寫入 Google 試算表失敗：" + err.message;
+    statusEl.className = "sync-status err";
+  }
+}
+
+// 從 Google 試算表讀取目前使用者的歷史紀錄
+async function loadRecordsFromSheet(){
+  const statusEl = document.getElementById("profileSyncStatus");
+  const body = document.getElementById("profileRecordsBody");
+  if(SPREADSHEET_ID.startsWith("YOUR_")){
+    statusEl.textContent = "⚠ 尚未設定 SPREADSHEET_ID，無法讀取試算表紀錄。";
+    statusEl.className = "sync-status err";
+    return;
+  }
+  statusEl.textContent = "讀取中...";
+  statusEl.className = "sync-status";
+  try{
+    const range = encodeURIComponent(`${SHEET_NAME}!A:F`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
+    const res = await fetch(url, { headers: { Authorization: "Bearer " + accessToken } });
+    if(!res.ok){ throw new Error("HTTP " + res.status); }
+    const data = await res.json();
+    const rows = (data.values || []).filter(r => r[2] === currentUser.email);
+    if(rows.length === 0){
+      body.innerHTML = `<tr><td colspan="4" style="color:var(--ink-soft);">目前還沒有測驗紀錄</td></tr>`;
+    }else{
+      body.innerHTML = rows.map(r => `
+        <tr><td>${r[0]||''}</td><td>${r[3]||''} / 10</td><td>${r[4]||''} 分</td><td>${r[5]||''} 分</td></tr>
+      `).join('');
+    }
+    statusEl.textContent = "✅ 已從 Google 試算表載入";
+    statusEl.className = "sync-status ok";
+  }catch(err){
+    statusEl.textContent = "❌ 讀取試算表失敗：" + err.message;
+    statusEl.className = "sync-status err";
+  }
+}
+
+document.getElementById("refreshRecordsBtn").addEventListener("click", loadRecordsFromSheet);
+
+window.addEventListener("load", initGoogleAuth);
 </script>
 </body>
 </html>
