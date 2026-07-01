@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -13,29 +12,113 @@ main{max-width:1000px;margin:auto;padding:20px}
 h2{color:#1f4e79}
 .option{padding:8px;margin:6px 0;background:#f1f3f6;border-radius:8px;cursor:pointer}
 .option:hover{background:#e7eef9}
+.option.selected{background:#cfe2ff}
 .result{display:none;margin-top:10px;padding:10px;background:#eef7ff;border-left:4px solid #1f4e79}
 .score{font-weight:bold;color:#1f4e79}
 button{padding:10px 14px;margin-top:10px;border:none;border-radius:8px;background:#1f4e79;color:#fff;cursor:pointer}
+button:disabled{background:#9db3c8;cursor:not-allowed}
+/* ---- 登入畫面 ---- */
+.login-gate{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:80px 20px;gap:16px;
+}
+.login-gate h2{color:#1f4e79;margin:0;}
+.login-gate p{color:#666;font-size:14px;max-width:420px;margin:0;}
+.login-input{
+  width:100%;max-width:300px;padding:9px 12px;border:1px solid #ccd3dc;
+  border-radius:8px;font-size:14px;
+}
+.app-hidden{display:none !important;}
+.user-bar{
+  max-width:1000px;margin:10px auto 0;padding:0 20px;
+  display:flex;justify-content:flex-end;align-items:center;gap:10px;
+  font-size:13px;color:#555;
+}
+.logout-link{background:none;border:none;color:#1f4e79;text-decoration:underline;cursor:pointer;padding:0;font-size:12px;}
+.sync-status{font-size:12.5px;color:#666;margin-top:8px;}
+.sync-status.ok{color:#1f8a5f;}
+.sync-status.err{color:#c1502e;}
+.score-cards{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
+.score-card{flex:1;min-width:140px;background:#f1f6fc;border-radius:10px;padding:14px;text-align:center;}
+.score-card .label{font-size:12.5px;color:#666;margin-bottom:6px;}
+.score-card .value{font-size:26px;font-weight:bold;color:#1f4e79;}
 </style>
 </head>
 <body>
-
+<!-- ============ 未登入提示（一般情況下不會顯示，因為登入資訊沿用主站） ============ -->
+<div class="login-gate" id="loginGate">
+  <h2>責無旁貸｜課後測驗</h2>
+  <p>尚未偵測到登入資訊。請先回到讀書會首頁登入姓名與 Email，再回來進行本測驗；登入後即可直接作答，不需重複輸入。</p>
+  <button id="backToHomeBtn" onclick="window.location.href='../index.html'">回讀書會首頁登入</button>
+  <div class="sync-status" id="loginStatus"></div>
+</div>
+<div id="appRoot" class="app-hidden">
 <header>
 <h1>《責無旁貸》補教老師領導力情境測驗</h1>
 <p>10 個反直覺教學現場案例｜Extreme Ownership</p>
 </header>
-
-<main id="quiz"></main>
-
-<div class="card">
-<h2>總分</h2>
-<p id="total">0</p>
-<button onclick="calcResult()">計算結果</button>
-<div id="analysis"></div>
+<div class="user-bar">
+  <span id="userChip"></span>
+  <button class="logout-link" id="logoutBtn">登出</button>
 </div>
-
+<main id="quiz"></main>
+<div class="card">
+<h2>本次測驗結果</h2>
+<div class="score-cards">
+  <div class="score-card"><div class="label">本次得分</div><div class="value" id="total">0</div></div>
+  <div class="score-card"><div class="label">累積總分</div><div class="value" id="cumTotal">0</div></div>
+</div>
+<button id="calcBtn" onclick="calcResult()">計算結果並送出</button>
+<div id="analysis"></div>
+<div class="sync-status" id="sheetSyncStatus"></div>
+</div>
+</div>
 <script>
+/* =======================================================
+   登入資訊沿用讀書會主站（透過 localStorage 共用同一個帳號，
+   不需要在本測驗頁面重新輸入姓名／Email）
+   ======================================================= */
+const BRC_USER_KEY = "brc_current_user"; // 需與主站 index.html 使用的 key 一致
+let currentUser = null; // {name, email}
+let quizCumulativeScore = 0; // 本帳號在本次瀏覽階段的累積總分
+
+function onLoginSuccess(){
+  document.getElementById("loginGate").classList.add("app-hidden");
+  document.getElementById("appRoot").classList.remove("app-hidden");
+  document.getElementById("userChip").textContent = `👤 ${currentUser.name}（${currentUser.email}）`;
+  loadCumulativeFromSheet();
+}
+
+// 頁面載入時自動從 localStorage 讀取主站登入資訊
+(function tryAutoLogin(){
+  try{
+    const saved = localStorage.getItem(BRC_USER_KEY);
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed && parsed.name && parsed.email){
+        currentUser = parsed;
+        onLoginSuccess();
+        return;
+      }
+    }
+  }catch(e){}
+  // 沒有登入資訊時，維持顯示登入提示畫面（loginGate 預設可見）
+})();
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  currentUser = null;
+  quizCumulativeScore = 0;
+  try{ localStorage.removeItem(BRC_USER_KEY); }catch(e){}
+  document.getElementById("appRoot").classList.add("app-hidden");
+  document.getElementById("loginGate").classList.remove("app-hidden");
+});
+
+/* =======================================================
+   測驗題目與選項計分（維持原始設計：每個選項有不同分數，
+   最高單題 10 分，10 題滿分 100 分）
+   ======================================================= */
 let total = 0;
+let answeredCount = 0;
 
 const questions = [
 {
@@ -141,39 +224,142 @@ a:"紀律帶來長期自由"
 ];
 
 const quiz = document.getElementById("quiz");
+const selections = new Array(questions.length).fill(null); // 記錄每題已選分數，避免重複計分
 
 questions.forEach((item,i)=>{
 let div = document.createElement("div");
 div.className="card";
-
 let html = `<h2>${item.q}</h2>`;
 item.o.forEach((opt,idx)=>{
-html += `<div class='option' onclick='select(${i},${opt[1]},this)'>${opt[0]}</div>`;
+html += `<div class='option' data-q='${i}' data-idx='${idx}' onclick='select(${i},${opt[1]},this)'>${opt[0]}</div>`;
 });
 html += `<div class='result'>${item.a}</div>`;
-
 div.innerHTML = html;
 quiz.appendChild(div);
 });
 
 function select(q,score,el){
-total += score;
-el.style.background="#cfe2ff";
-el.parentNode.querySelector(".result").style.display="block";
-document.getElementById("total").innerText = total;
+  // 若該題已選過，先扣掉舊分數，避免重複點選造成分數異常
+  if(selections[q] !== null){
+    total -= selections[q];
+  } else {
+    answeredCount++;
+  }
+  selections[q] = score;
+  total += score;
+
+  // 更新該題選項的視覺狀態
+  const siblings = el.parentNode.querySelectorAll(`.option[data-q='${q}']`);
+  siblings.forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+
+  el.parentNode.querySelector(".result").style.display="block";
+  document.getElementById("total").innerText = total;
+}
+
+/* =======================================================
+   計算結果 + 累積個人分數 + 同步至 Google 試算表
+   （與主站「閱讀測驗」使用相同的 Apps Script Web App）
+   ======================================================= */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpme1PMUpVZmT5E4IBwOEr8W6ly7PdU0vtXuURQ38GE6JMJwmyqb5BoqAHxHcBoks/exec";
+
+function levelLabel(score){
+  if(score>=90) return "責無旁貸領導者";
+  if(score>=75) return "成長型領導者";
+  if(score>=60) return "管理型";
+  return "外歸因傾向";
 }
 
 function calcResult(){
-let msg="";
-if(total>=90) msg="責無旁貸領導者";
-else if(total>=75) msg="成長型領導者";
-else if(total>=60) msg="管理型";
-else msg="外歸因傾向";
+  if(!currentUser){
+    alert("請先登入");
+    return;
+  }
+  if(answeredCount < questions.length){
+    alert(`請先完成全部題目（目前已作答 ${answeredCount} / ${questions.length} 題）`);
+    return;
+  }
 
-document.getElementById("analysis").innerHTML =
-"<h3>"+msg+"</h3><p>《責無旁貸》核心：先看自己能改善什麼，而不是責怪他人。</p>";
+  const thisScore = total;
+  quizCumulativeScore += thisScore;
+
+  const msg = levelLabel(thisScore);
+  document.getElementById("cumTotal").innerText = quizCumulativeScore;
+  document.getElementById("analysis").innerHTML =
+    "<h3>"+msg+"</h3><p>《責無旁貸》核心：先看自己能改善什麼，而不是責怪他人。</p>";
+
+  // 送出後鎖定按鈕，避免同一次作答重複累積
+  document.getElementById("calcBtn").disabled = true;
+
+  appendRecordToSheet({
+    timestamp: new Date().toLocaleString('zh-TW'),
+    name: currentUser.name,
+    email: currentUser.email,
+    quizName: "責無旁貸課後測驗",
+    thisScore: thisScore,
+    cumulativeScore: quizCumulativeScore
+  });
+}
+
+async function appendRecordToSheet(record){
+  const statusEl = document.getElementById("sheetSyncStatus");
+  if(APPS_SCRIPT_URL.startsWith("YOUR_")){
+    statusEl.textContent = "⚠ 尚未設定 APPS_SCRIPT_URL，紀錄僅顯示於畫面上，未寫入 Google 試算表。";
+    statusEl.className = "sync-status err";
+    return;
+  }
+  statusEl.textContent = "同步中...";
+  statusEl.className = "sync-status";
+  try{
+    const params = new URLSearchParams({
+      action: "append",
+      timestamp: record.timestamp,
+      name: record.name,
+      email: record.email,
+      correct: record.quizName,   // 沿用既有欄位，寫入測驗名稱以區分書籍
+      thisScore: record.thisScore,
+      cumulativeScore: record.cumulativeScore
+    });
+    const res = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
+    const data = await res.json();
+    if(!res.ok || data.status !== "ok"){ throw new Error(data.message || ("HTTP " + res.status)); }
+    statusEl.textContent = "✅ 已同步至 Google 試算表";
+    statusEl.className = "sync-status ok";
+  }catch(err){
+    statusEl.textContent = "❌ 寫入 Google 試算表失敗：" + err.message;
+    statusEl.className = "sync-status err";
+  }
+}
+
+// 登入後讀取此帳號在本測驗的歷史累積分數，接續累加（而不是每次重新歸零）
+async function loadCumulativeFromSheet(){
+  const statusEl = document.getElementById("sheetSyncStatus");
+  if(APPS_SCRIPT_URL.startsWith("YOUR_")) return;
+  statusEl.textContent = "讀取歷史累積分數中...";
+  statusEl.className = "sync-status";
+  try{
+    const params = new URLSearchParams({ action: "list", email: currentUser.email });
+    const res = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
+    const data = await res.json();
+    if(!res.ok || data.status !== "ok"){ throw new Error(data.message || ("HTTP " + res.status)); }
+    const rows = data.rows || [];
+    // 篩選出屬於本測驗的紀錄，取最後一筆的累積總分作為起點
+    const ownershipRows = rows.filter(r => (r[3]||"") === "責無旁貸課後測驗");
+    if(ownershipRows.length > 0){
+      const last = ownershipRows[ownershipRows.length - 1];
+      quizCumulativeScore = Number(last[5]) || 0;
+    } else {
+      quizCumulativeScore = 0;
+    }
+    document.getElementById("cumTotal").innerText = quizCumulativeScore;
+    statusEl.textContent = "✅ 已載入歷史累積分數";
+    statusEl.className = "sync-status ok";
+  }catch(err){
+    quizCumulativeScore = 0;
+    statusEl.textContent = "❌ 讀取歷史累積分數失敗：" + err.message;
+    statusEl.className = "sync-status err";
+  }
 }
 </script>
-
 </body>
 </html>
