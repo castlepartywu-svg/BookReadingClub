@@ -392,12 +392,13 @@ canvas{max-width:100%;}
       <h3>📖 用海軍陸戰隊看教育</h3>
       <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-8px;">先觀看影片，再前往課後測驗</p>
       <div style="margin-bottom:22px;">
-        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">閱讀影片連結</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-          <input type="text" id="ownershipVideoInput" class="quiz-name-input" placeholder="貼上 YouTube 影片網址" style="max-width:360px;flex:1;min-width:200px;">
-          <button type="button" class="quiz-reset-btn" id="ownershipVideoUpdateBtn" style="margin:0;">更新連結</button>
+        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">教學影片連結（可新增多部）</label>
+        <div id="ownershipVideoListDisplay" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="ownershipVideoNameInput" class="quiz-name-input" placeholder="影片名稱（例如：第1集）" style="max-width:180px;flex:1;min-width:140px;">
+          <input type="text" id="ownershipVideoUrlInput" class="quiz-name-input" placeholder="貼上 YouTube 影片網址" style="max-width:360px;flex:2;min-width:200px;">
+          <button type="button" class="quiz-reset-btn" id="ownershipVideoAddBtn" style="margin:0;">新增影片</button>
         </div>
-        <a class="quiz-video-link" href="https://www.youtube.com/watch?v=REPLACE_WITH_VIDEO_ID" target="_blank" rel="noopener" id="ownershipVideoLink">▶ 點此前往 YouTube 觀看影片</a>
         <div class="sync-status" id="ownershipVideoSyncStatus"></div>
       </div>
       <a href="AfterReqdingQuiz/AfterReadingTheOwnership.html" class="quiz-submit-btn" style="display:inline-block;text-decoration:none;">前往課後測驗 →</a>
@@ -916,12 +917,28 @@ document.getElementById("addAdminPasswordBtn").addEventListener("click", () => {
   renderAdminPasswordList();
 });
 /* =======================================================
-   「用海軍陸戰隊看教育」影片連結：可編輯，並同步至 Google 試算表
-   （沿用同一個 APPS_SCRIPT_URL，新增 getSetting / setSetting 兩個 action）
+   「用海軍陸戰隊看教育」教學影片清單：可新增多部，並同步至 Google 試算表
+   （沿用同一個 APPS_SCRIPT_URL，新增 getSetting / setSetting 兩個 action，
+   整份清單以 JSON 字串存在單一 key：ownership_video_links）
    ======================================================= */
-const OWNERSHIP_VIDEO_KEY = "ownership_video_link";
-async function loadOwnershipVideoLink(){
-  const link = document.getElementById("ownershipVideoLink");
+const OWNERSHIP_VIDEO_KEY = "ownership_video_links";
+let ownershipVideos = []; // [{name, url}, ...]
+
+function renderOwnershipVideoList(){
+  const wrap = document.getElementById("ownershipVideoListDisplay");
+  if(ownershipVideos.length === 0){
+    wrap.innerHTML = `<div style="font-size:13px;color:var(--ink-soft);">尚未新增任何影片連結</div>`;
+    return;
+  }
+  wrap.innerHTML = ownershipVideos.map((v, i) => `
+    <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:5px;padding:8px 12px;">
+      <a class="quiz-video-link" href="${v.url}" target="_blank" rel="noopener" style="flex:1;">▶ ${v.name || ('影片 ' + (i+1))}</a>
+      <button type="button" class="logout-link" data-idx="${i}" onclick="removeOwnershipVideo(${i})">刪除</button>
+    </div>
+  `).join('');
+}
+
+async function loadOwnershipVideoLinks(){
   const statusEl = document.getElementById("ownershipVideoSyncStatus");
   if(APPS_SCRIPT_URL.startsWith("YOUR_")) return;
   try{
@@ -929,32 +946,30 @@ async function loadOwnershipVideoLink(){
     const res = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
     const data = await res.json();
     if(res.ok && data.status === "ok" && data.value){
-      link.href = data.value;
-      statusEl.textContent = "✅ 已從 Google 試算表載入影片連結";
+      try{ ownershipVideos = JSON.parse(data.value) || []; }catch(e){ ownershipVideos = []; }
+      renderOwnershipVideoList();
+      statusEl.textContent = "✅ 已從 Google 試算表載入影片清單";
       statusEl.className = "sync-status ok";
+    }else{
+      renderOwnershipVideoList();
     }
   }catch(err){
-    statusEl.textContent = "❌ 讀取影片連結失敗：" + err.message;
+    statusEl.textContent = "❌ 讀取影片清單失敗：" + err.message;
     statusEl.className = "sync-status err";
   }
 }
-document.getElementById("ownershipVideoUpdateBtn").addEventListener("click", async () => {
-  const input = document.getElementById("ownershipVideoInput");
-  const link = document.getElementById("ownershipVideoLink");
+
+async function saveOwnershipVideoLinks(){
   const statusEl = document.getElementById("ownershipVideoSyncStatus");
-  const val = input.value.trim();
-  if(!val) return;
-  link.href = val;
-  input.value = "";
   if(APPS_SCRIPT_URL.startsWith("YOUR_")){
-    statusEl.textContent = "⚠ 尚未設定 APPS_SCRIPT_URL，連結僅顯示於畫面上，未寫入 Google 試算表。";
+    statusEl.textContent = "⚠ 尚未設定 APPS_SCRIPT_URL，清單僅顯示於畫面上，未寫入 Google 試算表。";
     statusEl.className = "sync-status err";
     return;
   }
   statusEl.textContent = "同步中...";
   statusEl.className = "sync-status";
   try{
-    const params = new URLSearchParams({ action: "setSetting", key: OWNERSHIP_VIDEO_KEY, value: val });
+    const params = new URLSearchParams({ action: "setSetting", key: OWNERSHIP_VIDEO_KEY, value: JSON.stringify(ownershipVideos) });
     const res = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
     const data = await res.json();
     if(!res.ok || data.status !== "ok"){ throw new Error(data.message || ("HTTP " + res.status)); }
@@ -964,14 +979,34 @@ document.getElementById("ownershipVideoUpdateBtn").addEventListener("click", asy
     statusEl.textContent = "❌ 寫入 Google 試算表失敗：" + err.message;
     statusEl.className = "sync-status err";
   }
+}
+
+function removeOwnershipVideo(idx){
+  ownershipVideos.splice(idx, 1);
+  renderOwnershipVideoList();
+  saveOwnershipVideoLinks();
+}
+
+document.getElementById("ownershipVideoAddBtn").addEventListener("click", () => {
+  const nameInput = document.getElementById("ownershipVideoNameInput");
+  const urlInput = document.getElementById("ownershipVideoUrlInput");
+  const name = nameInput.value.trim();
+  const url = urlInput.value.trim();
+  if(!url) return;
+  ownershipVideos.push({ name: name || `影片 ${ownershipVideos.length + 1}`, url });
+  nameInput.value = "";
+  urlInput.value = "";
+  renderOwnershipVideoList();
+  saveOwnershipVideoLinks();
 });
-document.getElementById("ownershipVideoInput").addEventListener("keydown", (e) => {
+document.getElementById("ownershipVideoUrlInput").addEventListener("keydown", (e) => {
   if(e.key === "Enter"){
     e.preventDefault();
-    document.getElementById("ownershipVideoUpdateBtn").click();
+    document.getElementById("ownershipVideoAddBtn").click();
   }
 });
-loadOwnershipVideoLink();
+renderOwnershipVideoList();
+loadOwnershipVideoLinks();
 </script>
 </body>
 </html>
