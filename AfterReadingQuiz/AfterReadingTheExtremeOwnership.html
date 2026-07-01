@@ -1,1 +1,179 @@
 
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>責無旁貸｜補教老師領導力情境測驗</title>
+<style>
+body{font-family:Arial,"Noto Sans TC";margin:0;background:#f5f7fb;color:#333}
+header{background:#1f4e79;color:#fff;padding:24px;text-align:center}
+main{max-width:1000px;margin:auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:18px;margin:18px 0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+h2{color:#1f4e79}
+.option{padding:8px;margin:6px 0;background:#f1f3f6;border-radius:8px;cursor:pointer}
+.option:hover{background:#e7eef9}
+.result{display:none;margin-top:10px;padding:10px;background:#eef7ff;border-left:4px solid #1f4e79}
+.score{font-weight:bold;color:#1f4e79}
+button{padding:10px 14px;margin-top:10px;border:none;border-radius:8px;background:#1f4e79;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+
+<header>
+<h1>《責無旁貸》補教老師領導力情境測驗</h1>
+<p>10 個反直覺教學現場案例｜Extreme Ownership</p>
+</header>
+
+<main id="quiz"></main>
+
+<div class="card">
+<h2>總分</h2>
+<p id="total">0</p>
+<button onclick="calcResult()">計算結果</button>
+<div id="analysis"></div>
+</div>
+
+<script>
+let total = 0;
+
+const questions = [
+{
+q:"1. 家長說孩子被老師罵，但老師覺得只是提醒。你是主任，你怎麼做？",
+o:[
+["A. 家長太敏感",2],
+["B. 支持老師",4],
+["C. 要老師注意語氣",6],
+["D. 檢視課堂流程與溝通機制",10]
+],
+a:"責無旁貸：先看系統，而不是責怪個人"
+},
+{
+q:"2. 成績突然下降，你第一步？",
+o:[
+["A. 罵學生",2],
+["B. 加作業",4],
+["C. 分析題型與教學",8],
+["D. 檢視教學與學習流程",10]
+],
+a:"先找原因，不先找人"
+},
+{
+q:"3. 班級很吵",
+o:[
+["A. 學生太皮",2],
+["B. 罵一頓",4],
+["C. 改變座位",6],
+["D. 建立明確規則與流程",10]
+],
+a:"沒有壞學生，只有不清楚的系統"
+},
+{
+q:"4. 老師之間互相推責",
+o:[
+["A. 各做各的",2],
+["B. 主管處罰",4],
+["C. 溝通一下",6],
+["D. 建立共同責任與流程",10]
+],
+a:"Cover & Move"
+},
+{
+q:"5. 學生不交作業",
+o:[
+["A. 罵",2],
+["B. 加倍作業",4],
+["C. 通知家長",6],
+["D. 檢查作業設計與動機",10]
+],
+a:"責任在系統設計"
+},
+{
+q:"6. 新老師帶班混亂",
+o:[
+["A. 換老師",2],
+["B. 罵老師",4],
+["C. 幫他改教材",6],
+["D. 建立訓練與支持系統",10]
+],
+a:"領導是培養，不是替換"
+},
+{
+q:"7. 家長要求特權",
+o:[
+["A. 拒絕",4],
+["B. 同意",2],
+["C. 交給主任",6],
+["D. 建立一致制度",10]
+],
+a:"公平來自制度"
+},
+{
+q:"8. 教學進度落後",
+o:[
+["A. 加快教",4],
+["B. 砍內容",6],
+["C. 忽略理解",2],
+["D. 重新排序與優先級",10]
+],
+a:"Prioritize & Execute"
+},
+{
+q:"9. 學生作弊",
+o:[
+["A. 公開羞辱",2],
+["B. 忽略",2],
+["C. 記過",6],
+["D. 檢討評量制度與誠信教育",10]
+],
+a:"制度比處罰重要"
+},
+{
+q:"10. 招生壓力",
+o:[
+["A. 降標準",2],
+["B. 罵老師",2],
+["C. 增加廣告",6],
+["D. 平衡教學品質與系統目標",10]
+],
+a:"紀律帶來長期自由"
+}
+];
+
+const quiz = document.getElementById("quiz");
+
+questions.forEach((item,i)=>{
+let div = document.createElement("div");
+div.className="card";
+
+let html = `<h2>${item.q}</h2>`;
+item.o.forEach((opt,idx)=>{
+html += `<div class='option' onclick='select(${i},${opt[1]},this)'>${opt[0]}</div>`;
+});
+html += `<div class='result'>${item.a}</div>`;
+
+div.innerHTML = html;
+quiz.appendChild(div);
+});
+
+function select(q,score,el){
+total += score;
+el.style.background="#cfe2ff";
+el.parentNode.querySelector(".result").style.display="block";
+document.getElementById("total").innerText = total;
+}
+
+function calcResult(){
+let msg="";
+if(total>=90) msg="責無旁貸領導者";
+else if(total>=75) msg="成長型領導者";
+else if(total>=60) msg="管理型";
+else msg="外歸因傾向";
+
+document.getElementById("analysis").innerHTML =
+"<h3>"+msg+"</h3><p>《責無旁貸》核心：先看自己能改善什麼，而不是責怪他人。</p>";
+}
+</script>
+
+</body>
+</html>
