@@ -274,7 +274,7 @@ canvas{max-width:100%;}
   <div class="view active" id="view-home">
     <div class="section-label">本週讀書會教材</div>
     <a href="PreTest/TheExtremeOwnership.html" class="panel" style="display:block;padding:0;overflow:hidden;text-decoration:none;color:inherit;">
-      <img src="images/TheExtremeOwnership.png" alt="責無旁貸，由海軍陸戰隊來看教育" style="width:100%;display:block;">
+      <img src="images/極端責任_企業領導秘訣.png" alt="責無旁貸，由海軍陸戰隊來看教育" style="width:100%;display:block;">
       <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <div>
           <div style="font-family:var(--font-display);font-size:17px;font-weight:700;">責無旁貸，由海軍陸戰隊來看教育</div>
@@ -794,6 +794,8 @@ document.getElementById("simpleLoginBtn").addEventListener("click", () => {
   statusEl.textContent = "";
   onLoginSuccess();
 });
+const BRC_USER_KEY = "brc_current_user"; // 讀書會共用登入資訊，供其他測驗頁面（如課後測驗）讀取
+
 function onLoginSuccess(){
   document.getElementById("loginGate").classList.add("app-hidden");
   document.getElementById("appShell").classList.remove("app-hidden");
@@ -803,10 +805,25 @@ function onLoginSuccess(){
   document.getElementById("profileAvatar").textContent = initials(currentUser.name);
   document.getElementById("profileName").textContent = currentUser.name;
   document.getElementById("profileEmail").textContent = currentUser.email;
+  try{ localStorage.setItem(BRC_USER_KEY, JSON.stringify(currentUser)); }catch(e){}
   loadRecordsFromSheet();
 }
+// 進站時若先前已登入過（localStorage 有紀錄），自動帶入，不需重新輸入姓名/Email
+(function tryAutoLogin(){
+  try{
+    const saved = localStorage.getItem(BRC_USER_KEY);
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed && parsed.name && parsed.email){
+        currentUser = parsed;
+        onLoginSuccess();
+      }
+    }
+  }catch(e){}
+})();
 document.getElementById("logoutBtn").addEventListener("click", () => {
   currentUser = null;
+  try{ localStorage.removeItem(BRC_USER_KEY); }catch(e){}
   document.getElementById("appShell").classList.add("app-hidden");
   document.getElementById("loginGate").classList.remove("app-hidden");
   document.getElementById("loginName").value = "";
