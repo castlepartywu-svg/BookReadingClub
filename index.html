@@ -314,44 +314,15 @@ canvas{max-width:100%;}
     </div>
   </div>
   <div class="tabs">
-    <button class="tab-btn active" data-view="teacher">教師 Dashboard</button>
-    <button class="tab-btn" data-view="home">首頁 Dashboard</button>
+    <button class="tab-btn active" data-view="home">首頁 Dashboard</button>
     <button class="tab-btn" data-view="record">個人學習紀錄</button>
     <button class="tab-btn" data-view="admin">管理者 Dashboard</button>
     <button class="tab-btn" data-view="charts">圖表分析</button>
-    <button class="tab-btn" data-view="flow">流程與狀態機</button>
     <button class="tab-btn" data-view="quiz">閱讀測驗</button>
     <button class="tab-btn" data-view="profile">個人資料</button>
   </div>
-  <!-- ============ 教師 Dashboard ============ -->
-  <div class="view active" id="view-teacher">
-    <div class="section-label">學習卡片</div>
-    <div class="card-row cols-4">
-      <div class="stat-card"><div class="label">📚 可閱讀書籍</div><div class="value">50 本</div></div>
-      <div class="stat-card"><div class="label">📖 已閱讀</div><div class="value">32 本</div></div>
-      <div class="stat-card"><div class="label">📝 已完成課前測驗</div><div class="value">30 份</div></div>
-      <div class="stat-card"><div class="label">✅ 已完成課後測驗</div><div class="value">28 份</div></div>
-    </div>
-    <div class="section-label">統計卡片</div>
-    <div class="card-row cols-3">
-      <div class="stat-card"><div class="label">平均課前</div><div class="value before">70 分</div></div>
-      <div class="stat-card"><div class="label">平均課後</div><div class="value after">91 分</div></div>
-      <div class="stat-card"><div class="label">平均進步</div><div class="value gain">+21 分</div><div class="sub">已排除 skipped / not_required 紀錄</div></div>
-    </div>
-    <div class="panel">
-      <h3>近期待辦</h3>
-      <table>
-        <thead><tr><th>書籍</th><th>狀態</th><th>動作</th></tr></thead>
-        <tbody>
-          <tr><td>《教學評量設計入門》</td><td><span class="badge orange">課前測驗 in_progress</span></td><td>繼續作答</td></tr>
-          <tr><td>《差異化教學策略》</td><td><span class="badge gray">尚未開始閱讀</span></td><td>開始課前測驗</td></tr>
-          <tr><td>《班級經營實務》</td><td><span class="badge green">已完成閱讀，待課後測驗</span></td><td>開始課後測驗</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
   <!-- ============ 首頁 Dashboard ============ -->
-  <div class="view" id="view-home">
+  <div class="view active" id="view-home">
     <div class="section-label">課前測驗統計卡片</div>
     <div class="card-row cols-3">
       <div class="stat-card"><div class="label">已完成</div><div class="value after">35</div></div>
@@ -434,43 +405,6 @@ canvas{max-width:100%;}
     </div>
   </div>
   <!-- ============ 流程與狀態機 ============ -->
-  <div class="view" id="view-flow">
-    <div class="panel">
-      <h3>課前測驗紀錄狀態機</h3>
-      <div class="fsm">
-        <div class="fsm-node start">not_started</div>
-        <div class="fsm-arrow">開始作答 →</div>
-        <div class="fsm-node">in_progress</div>
-        <div class="fsm-arrow">繳交 →</div>
-        <div class="fsm-node end">completed</div>
-      </div>
-      <div class="fsm" style="padding-top:0;">
-        <div class="fsm-node skip">skipped</div>
-        <div class="fsm-arrow">非必須・教師選擇跳過</div>
-      </div>
-      <div class="fsm" style="padding-top:0;">
-        <div class="fsm-node skip">not_required</div>
-        <div class="fsm-arrow">該書未設定課前測驗</div>
-      </div>
-      <div class="note">
-        ⚠ <code>in_progress</code> 逾時行為（自動繳交 / 作廢需重作）需於後台設定中明確定義，並計入「作答次數」。<br>
-        ⚠ <code>skipped</code> 與 <code>not_required</code> 紀錄不納入學習成效統計，避免分母失真。
-      </div>
-    </div>
-    <div class="panel">
-      <h3>閱讀流程（書籍層級判斷）</h3>
-      <table>
-        <thead><tr><th>條件</th><th>結果</th></tr></thead>
-        <tbody>
-          <tr><td>未設定課前測驗</td><td>跳過，標記 <span class="badge gray">not_required</span></td></tr>
-          <tr><td>設定為「必須」且未完成</td><td>無法進入閱讀教材頁面</td></tr>
-          <tr><td>設定為「非必須」且選擇跳過</td><td>標記 <span class="badge gray">skipped</span>，不納入學習成效統計</td></tr>
-          <tr><td>已完成課前測驗</td><td>可進入閱讀教材頁面</td></tr>
-        </tbody>
-      </table>
-      <div class="note">「通過標準」為診斷性質，僅用於顯示基礎程度（低／中／高），不應用來阻擋進入閱讀流程。</div>
-    </div>
-  </div>
   <!-- ============ 閱讀測驗 ============ -->
   <div class="view" id="view-quiz">
 
