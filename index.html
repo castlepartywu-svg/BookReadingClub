@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>課前測驗功能原型</title>
+<title>心靈雞湯補給站</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
@@ -260,13 +260,38 @@ canvas{max-width:100%;}
 .profile-card .pname{font-family:var(--font-display);font-size:20px;font-weight:700;}
 .profile-card .pemail{font-size:13px;color:var(--ink-soft);}
 .app-hidden{display:none !important;}
+
+/* ---- 影片清單 ---- */
+.video-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.video-item{
+  display:flex;align-items:center;justify-content:space-between;
+  border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--paper);
+}
+.video-item a{
+  color:var(--after);text-decoration:none;font-size:14px;font-weight:600;
+  display:flex;align-items:center;gap:6px;
+}
+.video-item a:hover{text-decoration:underline;}
+.video-item .del-btn{
+  font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);
+  background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:3px;
+}
+.video-item .del-btn:hover{background:#FBE9E2;color:var(--gain);}
+.video-add-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.video-add-row input{flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:5px;font-size:13.5px;background:var(--paper);}
+.video-add-btn{
+  font-family:var(--font-mono);font-size:13px;padding:8px 14px;
+  background:var(--ink);color:var(--paper);border:none;border-radius:5px;cursor:pointer;white-space:nowrap;
+}
+.video-add-btn:hover{opacity:0.85;}
+.video-sync-note{font-family:var(--font-mono);font-size:11.5px;color:var(--after);margin-top:6px;display:flex;align-items:center;gap:5px;}
 </style>
 </head>
 <body>
 <!-- ============ 登入畫面 ============ -->
 <div class="login-gate" id="loginGate">
-  <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);">課前測驗功能原型 · Pre-test Prototype</div>
-  <h2>學習成效追蹤系統</h2>
+  <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);">心靈雞湯補給站 · Soul Soup Station</div>
+  <h2>心靈雞湯補給站</h2>
   <p>請輸入姓名與 Email 登入。登入後您的個人資料與每次測驗紀錄，會透過 Google 試算表內建的 Apps Script，寫入並保存在 Google Drive 上的試算表中（不需要 Google Cloud 專案）。</p>
   <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;">
     <input type="text" id="loginName" class="quiz-name-input" placeholder="姓名" style="max-width:none;">
@@ -279,12 +304,12 @@ canvas{max-width:100%;}
 <div class="shell app-hidden" id="appShell">
   <div class="masthead">
     <div>
-      <div class="eyebrow">課前測驗功能原型 · Pre-test Prototype</div>
-      <h1>學習成效追蹤系統</h1>
+      <div class="eyebrow">心靈雞湯補給站 · Soul Soup Station</div>
+      <h1>心靈雞湯補給站</h1>
     </div>
     <div class="meta" style="text-align:right;">
       <div class="user-chip" id="userChip" style="justify-content:flex-end;margin-bottom:6px;"></div>
-      規格版本 v1.0 草案・模擬資料<br>
+      閱讀・成長・測驗<br>
       <button class="logout-link" id="logoutBtn">登出</button>
     </div>
   </div>
@@ -499,8 +524,14 @@ canvas{max-width:100%;}
         </div>
 
         <div style="margin-bottom:22px;">
-          <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">閱讀影片連結</label>
-          <a class="quiz-video-link" id="quizVideoLink" href="#" target="_blank" rel="noopener">▶ 點此前往 YouTube 觀看影片</a>
+          <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:8px;">教學影片連結（可新增多部）</label>
+          <div class="video-list" id="videoList"></div>
+          <div class="video-add-row">
+            <input type="text" id="newVideoName" placeholder="影片名稱（例如：第1集）">
+            <input type="url" id="newVideoUrl" placeholder="貼上 YouTube 影片網址">
+            <button type="button" class="video-add-btn" onclick="addVideo()">＋ 新增</button>
+          </div>
+          <div class="video-sync-note" id="videoSyncNote"></div>
         </div>
 
         <form id="quizForm">
@@ -736,7 +767,9 @@ const ADMIN_PASSWORD = "admin2025"; // ← 管理者密碼，可自行修改
 const BOOKS = {
   nvc: {
     title: "📖 國小補習班 × 非暴力溝通",
-    video: "https://www.youtube.com/watch?v=TboRxGEF-Q4",
+    videos: [
+      {name:"非暴力溝通 教學影片", url:"https://www.youtube.com/watch?v=TboRxGEF-Q4"}
+    ],
     locked: false,
     questions: [
       {q:"1. 小華在補習班數學考差了，老師說：「你怎麼又考這麼差，是不是都沒在聽課？」請問用非暴力溝通的方式，老師更適合怎麼說？",
@@ -763,7 +796,9 @@ const BOOKS = {
   },
   courage: {
     title: "📗 被討厭的勇氣",
-    video: "https://www.youtube.com/results?search_query=被討厭的勇氣", // ← 可替換為正確影片網址
+    videos: [
+      {name:"被討厭的勇氣 第一集", url:"https://www.youtube.com/results?search_query=被討厭的勇氣"}
+    ],
     locked: true,
     questions: [
       {q:"1. 阿德勒心理學認為，人的煩惱來源是什麼？",
@@ -794,13 +829,59 @@ const BOOKS = {
 let currentBookKey = null;
 let quizCumulativeScore = 0;
 
+function renderVideoList(key){
+  const videos = BOOKS[key].videos;
+  const list = document.getElementById("videoList");
+  list.innerHTML = "";
+  if(videos.length === 0){
+    list.innerHTML = `<div style="font-size:13px;color:var(--ink-soft);">尚未新增影片，請在下方填寫後新增。</div>`;
+    return;
+  }
+  videos.forEach((v, idx) => {
+    const item = document.createElement("div");
+    item.className = "video-item";
+    item.innerHTML = `
+      <a href="${v.url}" target="_blank" rel="noopener">▶ ${v.name}</a>
+      <button class="del-btn" onclick="removeVideo('${key}', ${idx})">✕ 刪除</button>
+    `;
+    list.appendChild(item);
+  });
+  document.getElementById("videoSyncNote").innerHTML = `✅ 已載入 ${videos.length} 部影片`;
+}
+
+function addVideo(){
+  const name = document.getElementById("newVideoName").value.trim();
+  const url  = document.getElementById("newVideoUrl").value.trim();
+  const note = document.getElementById("videoSyncNote");
+  if(!name || !url){
+    note.textContent = "⚠ 請同時填寫影片名稱與網址";
+    note.style.color = "var(--gain)";
+    return;
+  }
+  if(!url.startsWith("http")){
+    note.textContent = "⚠ 網址格式不正確，請貼上完整 YouTube 連結";
+    note.style.color = "var(--gain)";
+    return;
+  }
+  BOOKS[currentBookKey].videos.push({name, url});
+  document.getElementById("newVideoName").value = "";
+  document.getElementById("newVideoUrl").value = "";
+  note.style.color = "";
+  renderVideoList(currentBookKey);
+}
+
+function removeVideo(key, idx){
+  BOOKS[key].videos.splice(idx, 1);
+  renderVideoList(key);
+}
+
 function selectBook(key){
   currentBookKey = key;
   const book = BOOKS[key];
   document.getElementById("quizPanel").classList.remove("app-hidden");
   document.getElementById("quizPanelTitle").textContent = book.title;
-  document.getElementById("quizVideoLink").href = book.video;
   document.getElementById("quizResult").style.display = "none";
+  renderVideoList(key);
   renderQuizQuestions(book.questions);
   document.getElementById("quizPanel").scrollIntoView({behavior:"smooth"});
 }
