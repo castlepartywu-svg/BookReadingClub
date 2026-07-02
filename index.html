@@ -292,10 +292,10 @@ canvas{max-width:100%;}
 <div class="login-gate" id="loginGate">
   <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);">心靈雞湯補給站 · Soul Soup Station</div>
   <h2>心靈雞湯補給站</h2>
-  <p>請輸入帳號與密碼登入。您的測驗紀錄將保存在 Google Drive 試算表中。</p>
+  <p>請輸入姓名與 Email 登入，開始閱讀與測驗。</p>
   <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;">
-    <input type="text" id="loginUsername" class="quiz-name-input" placeholder="帳號（Username）" style="max-width:none;" autocomplete="username">
-    <input type="password" id="loginPassword" class="quiz-name-input" placeholder="密碼（Password）" style="max-width:none;" autocomplete="current-password">
+    <input type="text" id="loginName" class="quiz-name-input" placeholder="姓名" style="max-width:none;">
+    <input type="email" id="loginEmail" class="quiz-name-input" placeholder="Email" style="max-width:none;">
   </div>
   <button class="gsi-btn" id="simpleLoginBtn">登入</button>
   <div class="sync-status" id="loginStatus"></div>
@@ -495,7 +495,7 @@ canvas{max-width:100%;}
       </div>
     </div>
 
-    <!-- 密碼解鎖彈窗 -->
+    <!-- 密碼解鎖彈窗 (管理者) -->
     <div class="modal-overlay app-hidden" id="pwModal">
       <div class="modal-box">
         <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:6px;">🔒 管理者密碼</div>
@@ -506,6 +506,21 @@ canvas{max-width:100%;}
           <button class="quiz-reset-btn" style="margin:0;flex:1;" onclick="closeModal()">取消</button>
         </div>
         <div class="sync-status" id="pwStatus"></div>
+      </div>
+    </div>
+
+    <!-- 影片編輯驗證彈窗 -->
+    <div class="modal-overlay app-hidden" id="editorModal">
+      <div class="modal-box">
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:6px;">✏️ 編輯影片連結</div>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;">請輸入編輯者帳號與密碼以新增或刪除影片連結。</p>
+        <input type="text" id="editorUsername" class="quiz-name-input" placeholder="帳號" style="max-width:none;margin-bottom:8px;" autocomplete="off">
+        <input type="password" id="editorPassword" class="quiz-name-input" placeholder="密碼" style="max-width:none;margin-bottom:10px;" autocomplete="off">
+        <div style="display:flex;gap:8px;">
+          <button class="quiz-submit-btn" style="flex:1;" onclick="confirmEditorAuth()">確認</button>
+          <button class="quiz-reset-btn" style="margin:0;flex:1;" onclick="closeEditorModal()">取消</button>
+        </div>
+        <div class="sync-status" id="editorStatus"></div>
       </div>
     </div>
 
@@ -524,14 +539,25 @@ canvas{max-width:100%;}
         </div>
 
         <div style="margin-bottom:22px;">
-          <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:8px;">教學影片連結（可新增多部）</label>
-          <div class="video-list" id="videoList"></div>
-          <div class="video-add-row">
-            <input type="text" id="newVideoName" placeholder="影片名稱（例如：第1集）">
-            <input type="url" id="newVideoUrl" placeholder="貼上 YouTube 影片網址">
-            <button type="button" class="video-add-btn" onclick="addVideo()">＋ 新增</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);">教學影片連結（可新增多部）</label>
+            <span id="editorBadge" style="display:none;font-family:var(--font-mono);font-size:11px;background:#E2F1EE;color:var(--after);padding:2px 8px;border-radius:10px;">✏️ 編輯模式</span>
           </div>
-          <div class="video-sync-note" id="videoSyncNote"></div>
+          <div class="video-list" id="videoList"></div>
+          <!-- 新增影片（僅編輯者可見） -->
+          <div id="videoEditPanel" class="app-hidden">
+            <div class="video-add-row">
+              <input type="text" id="newVideoName" placeholder="影片名稱（例如：第1集）">
+              <input type="url" id="newVideoUrl" placeholder="貼上 YouTube 影片網址">
+              <button type="button" class="video-add-btn" onclick="addVideo()">＋ 新增</button>
+            </div>
+            <div class="video-sync-note" id="videoSyncNote"></div>
+          </div>
+          <!-- 編輯鎖（非編輯者顯示） -->
+          <div id="videoLockBar" style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:8px 12px;border:1px dashed var(--line);border-radius:5px;background:var(--paper);">
+            <span style="font-size:13px;color:var(--ink-soft);">🔒 新增／刪除影片需要編輯者權限</span>
+            <button class="quiz-reset-btn" style="margin:0;padding:5px 12px;font-size:12px;" onclick="openEditorModal()">編輯者登入</button>
+          </div>
         </div>
 
         <form id="quizForm">
@@ -834,19 +860,21 @@ function renderVideoList(key){
   const list = document.getElementById("videoList");
   list.innerHTML = "";
   if(videos.length === 0){
-    list.innerHTML = `<div style="font-size:13px;color:var(--ink-soft);">尚未新增影片，請在下方填寫後新增。</div>`;
-    return;
+    list.innerHTML = `<div style="font-size:13px;color:var(--ink-soft);padding:6px 0;">尚未新增影片。</div>`;
+  } else {
+    videos.forEach((v, idx) => {
+      const item = document.createElement("div");
+      item.className = "video-item";
+      item.innerHTML = `
+        <a href="${v.url}" target="_blank" rel="noopener">▶ ${v.name}</a>
+        ${isEditor ? `<button class="del-btn" onclick="removeVideo('${key}', ${idx})">✕ 刪除</button>` : ""}
+      `;
+      list.appendChild(item);
+    });
   }
-  videos.forEach((v, idx) => {
-    const item = document.createElement("div");
-    item.className = "video-item";
-    item.innerHTML = `
-      <a href="${v.url}" target="_blank" rel="noopener">▶ ${v.name}</a>
-      <button class="del-btn" onclick="removeVideo('${key}', ${idx})">✕ 刪除</button>
-    `;
-    list.appendChild(item);
-  });
-  document.getElementById("videoSyncNote").innerHTML = `✅ 已載入 ${videos.length} 部影片`;
+  if(isEditor){
+    document.getElementById("videoSyncNote").innerHTML = `✅ 共 ${videos.length} 部影片`;
+  }
 }
 
 function addVideo(){
@@ -881,6 +909,18 @@ function selectBook(key){
   document.getElementById("quizPanel").classList.remove("app-hidden");
   document.getElementById("quizPanelTitle").textContent = book.title;
   document.getElementById("quizResult").style.display = "none";
+
+  // 依編輯者狀態顯示正確UI
+  if(isEditor){
+    document.getElementById("videoEditPanel").classList.remove("app-hidden");
+    document.getElementById("videoLockBar").style.display = "none";
+    document.getElementById("editorBadge").style.display = "";
+  } else {
+    document.getElementById("videoEditPanel").classList.add("app-hidden");
+    document.getElementById("videoLockBar").style.display = "";
+    document.getElementById("editorBadge").style.display = "none";
+  }
+
   renderVideoList(key);
   renderQuizQuestions(book.questions);
   document.getElementById("quizPanel").scrollIntoView({behavior:"smooth"});
@@ -997,35 +1037,31 @@ function initials(name){
   return trimmed.length <= 2 ? trimmed : trimmed.slice(0,1);
 }
 
-// 帳號資料（可新增多組）
-const USERS = [
-  { username: "shona", password: "wufatw550505", name: "Shona", email: "shona@soulsoap.local" },
-];
+// 編輯者帳號
+const EDITOR_USERNAME = "shona";
+const EDITOR_PASSWORD = "wufatw550505";
+let isEditor = false;
 
 document.getElementById("simpleLoginBtn").addEventListener("click", () => {
-  const username = document.getElementById("loginUsername").value.trim();
-  const password = document.getElementById("loginPassword").value;
+  const name  = document.getElementById("loginName").value.trim();
+  const email = document.getElementById("loginEmail").value.trim();
   const statusEl = document.getElementById("loginStatus");
-  if(!username || !password){
-    statusEl.textContent = "請輸入帳號與密碼";
+  if(!name || !email){
+    statusEl.textContent = "請輸入姓名與 Email";
     statusEl.className = "sync-status err";
     return;
   }
-  const matched = USERS.find(u => u.username === username && u.password === password);
-  if(!matched){
-    statusEl.textContent = "❌ 帳號或密碼錯誤，請再試一次";
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    statusEl.textContent = "Email 格式不正確";
     statusEl.className = "sync-status err";
-    document.getElementById("loginPassword").value = "";
-    document.getElementById("loginPassword").focus();
     return;
   }
-  currentUser = { name: matched.name, email: matched.email };
+  currentUser = { name, email };
   statusEl.textContent = "";
   onLoginSuccess();
 });
 
-// Enter 鍵觸發登入
-["loginUsername","loginPassword"].forEach(id => {
+["loginName","loginEmail"].forEach(id => {
   document.getElementById(id).addEventListener("keydown", e => {
     if(e.key === "Enter") document.getElementById("simpleLoginBtn").click();
   });
@@ -1036,7 +1072,7 @@ function onLoginSuccess(){
   document.getElementById("appShell").classList.remove("app-hidden");
 
   document.getElementById("userChip").innerHTML =
-    `<div class="avatar-circle">${initials(currentUser.name)}</div><span>${currentUser.name}</span>`;
+    `<div class="avatar-circle">${initials(currentUser.name)}</div><span>${currentUser.name}（${currentUser.email}）</span>`;
 
   document.getElementById("quizNameDisplay").textContent = currentUser.name;
 
@@ -1049,11 +1085,51 @@ function onLoginSuccess(){
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
   currentUser = null;
+  isEditor = false;
   document.getElementById("appShell").classList.add("app-hidden");
   document.getElementById("loginGate").classList.remove("app-hidden");
-  document.getElementById("loginUsername").value = "";
-  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginName").value = "";
+  document.getElementById("loginEmail").value = "";
   document.getElementById("loginStatus").textContent = "";
+});
+
+// ---- 影片編輯者驗證 ----
+function openEditorModal(){
+  document.getElementById("editorUsername").value = "";
+  document.getElementById("editorPassword").value = "";
+  document.getElementById("editorStatus").textContent = "";
+  document.getElementById("editorModal").classList.remove("app-hidden");
+  document.getElementById("editorUsername").focus();
+}
+
+function closeEditorModal(){
+  document.getElementById("editorModal").classList.add("app-hidden");
+}
+
+function confirmEditorAuth(){
+  const u = document.getElementById("editorUsername").value.trim();
+  const p = document.getElementById("editorPassword").value;
+  const s = document.getElementById("editorStatus");
+  if(u === EDITOR_USERNAME && p === EDITOR_PASSWORD){
+    isEditor = true;
+    closeEditorModal();
+    // 更新影片編輯UI
+    document.getElementById("videoEditPanel").classList.remove("app-hidden");
+    document.getElementById("videoLockBar").style.display = "none";
+    document.getElementById("editorBadge").style.display = "";
+    if(currentBookKey) renderVideoList(currentBookKey);
+  } else {
+    s.textContent = "❌ 帳號或密碼錯誤";
+    s.className = "sync-status err";
+    document.getElementById("editorPassword").value = "";
+    document.getElementById("editorPassword").focus();
+  }
+}
+
+["editorUsername","editorPassword"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => {
+    if(e.key === "Enter") confirmEditorAuth();
+  });
 });
 
 // 將一筆測驗紀錄寫入 Google 試算表（透過 Apps Script Web App，GET 請求避免 CORS 預檢問題）
