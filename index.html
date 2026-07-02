@@ -292,10 +292,10 @@ canvas{max-width:100%;}
 <div class="login-gate" id="loginGate">
   <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);">心靈雞湯補給站 · Soul Soup Station</div>
   <h2>心靈雞湯補給站</h2>
-  <p>請輸入姓名與 Email 登入。登入後您的個人資料與每次測驗紀錄，會透過 Google 試算表內建的 Apps Script，寫入並保存在 Google Drive 上的試算表中（不需要 Google Cloud 專案）。</p>
+  <p>請輸入帳號與密碼登入。您的測驗紀錄將保存在 Google Drive 試算表中。</p>
   <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;">
-    <input type="text" id="loginName" class="quiz-name-input" placeholder="姓名" style="max-width:none;">
-    <input type="email" id="loginEmail" class="quiz-name-input" placeholder="Email" style="max-width:none;">
+    <input type="text" id="loginUsername" class="quiz-name-input" placeholder="帳號（Username）" style="max-width:none;" autocomplete="username">
+    <input type="password" id="loginPassword" class="quiz-name-input" placeholder="密碼（Password）" style="max-width:none;" autocomplete="current-password">
   </div>
   <button class="gsi-btn" id="simpleLoginBtn">登入</button>
   <div class="sync-status" id="loginStatus"></div>
@@ -997,23 +997,38 @@ function initials(name){
   return trimmed.length <= 2 ? trimmed : trimmed.slice(0,1);
 }
 
+// 帳號資料（可新增多組）
+const USERS = [
+  { username: "shona", password: "wufatw550505", name: "Shona", email: "shona@soulsoap.local" },
+];
+
 document.getElementById("simpleLoginBtn").addEventListener("click", () => {
-  const name = document.getElementById("loginName").value.trim();
-  const email = document.getElementById("loginEmail").value.trim();
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value;
   const statusEl = document.getElementById("loginStatus");
-  if(!name || !email){
-    statusEl.textContent = "請輸入姓名與 Email";
+  if(!username || !password){
+    statusEl.textContent = "請輸入帳號與密碼";
     statusEl.className = "sync-status err";
     return;
   }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    statusEl.textContent = "Email 格式不正確";
+  const matched = USERS.find(u => u.username === username && u.password === password);
+  if(!matched){
+    statusEl.textContent = "❌ 帳號或密碼錯誤，請再試一次";
     statusEl.className = "sync-status err";
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginPassword").focus();
     return;
   }
-  currentUser = { name, email };
+  currentUser = { name: matched.name, email: matched.email };
   statusEl.textContent = "";
   onLoginSuccess();
+});
+
+// Enter 鍵觸發登入
+["loginUsername","loginPassword"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => {
+    if(e.key === "Enter") document.getElementById("simpleLoginBtn").click();
+  });
 });
 
 function onLoginSuccess(){
@@ -1021,7 +1036,7 @@ function onLoginSuccess(){
   document.getElementById("appShell").classList.remove("app-hidden");
 
   document.getElementById("userChip").innerHTML =
-    `<div class="avatar-circle">${initials(currentUser.name)}</div><span>${currentUser.name}（${currentUser.email}）</span>`;
+    `<div class="avatar-circle">${initials(currentUser.name)}</div><span>${currentUser.name}</span>`;
 
   document.getElementById("quizNameDisplay").textContent = currentUser.name;
 
@@ -1036,8 +1051,8 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   currentUser = null;
   document.getElementById("appShell").classList.add("app-hidden");
   document.getElementById("loginGate").classList.remove("app-hidden");
-  document.getElementById("loginName").value = "";
-  document.getElementById("loginEmail").value = "";
+  document.getElementById("loginUsername").value = "";
+  document.getElementById("loginPassword").value = "";
   document.getElementById("loginStatus").textContent = "";
 });
 
