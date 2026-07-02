@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>大立昇老師讀書會</title>
+<title>課前測驗功能原型</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
@@ -165,6 +165,7 @@ tr:last-child td{border-bottom:none;}
   padding:8px 12px;border-radius:2px;margin-top:10px;
 }
 canvas{max-width:100%;}
+
 /* ---- 閱讀測驗 quiz styles (整合進原本配色系統) ---- */
 .quiz-video-link{
   display:inline-flex;align-items:center;gap:6px;
@@ -201,6 +202,30 @@ canvas{max-width:100%;}
 }
 .quiz-reset-btn:hover{background:#F6F3EC;}
 .quiz-result{display:none;}
+
+/* ---- 書籍卡片 ---- */
+.book-card{
+  background:var(--card);border:1px solid var(--line);border-radius:8px;
+  padding:24px 20px;cursor:pointer;transition:border-color .15s,box-shadow .15s;
+  display:flex;flex-direction:column;align-items:flex-start;
+}
+.book-card:hover{border-color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.book-card.locked{opacity:0.7;}
+.book-card.locked:hover{border-color:var(--gain);}
+.book-card-icon{font-size:32px;margin-bottom:10px;}
+.book-card-title{font-family:var(--font-display);font-size:17px;font-weight:700;}
+.book-card-meta{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);margin-top:4px;}
+
+/* ---- 密碼彈窗 ---- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(31,36,33,0.45);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+}
+.modal-box{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:28px 30px;max-width:360px;width:90%;
+}
+
 /* ---- 登入 / 個人資料 ---- */
 .login-gate{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -240,8 +265,8 @@ canvas{max-width:100%;}
 <body>
 <!-- ============ 登入畫面 ============ -->
 <div class="login-gate" id="loginGate">
-  <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);">讀書會記錄</div>
-  <h2>大立昇老師讀書會</h2>
+  <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);">課前測驗功能原型 · Pre-test Prototype</div>
+  <h2>學習成效追蹤系統</h2>
   <p>請輸入姓名與 Email 登入。登入後您的個人資料與每次測驗紀錄，會透過 Google 試算表內建的 Apps Script，寫入並保存在 Google Drive 上的試算表中（不需要 Google Cloud 專案）。</p>
   <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;">
     <input type="text" id="loginName" class="quiz-name-input" placeholder="姓名" style="max-width:none;">
@@ -250,11 +275,12 @@ canvas{max-width:100%;}
   <button class="gsi-btn" id="simpleLoginBtn">登入</button>
   <div class="sync-status" id="loginStatus"></div>
 </div>
+
 <div class="shell app-hidden" id="appShell">
   <div class="masthead">
     <div>
-      <div class="eyebrow">讀書會記錄</div>
-      <h1>大立昇老師讀書會</h1>
+      <div class="eyebrow">課前測驗功能原型 · Pre-test Prototype</div>
+      <h1>學習成效追蹤系統</h1>
     </div>
     <div class="meta" style="text-align:right;">
       <div class="user-chip" id="userChip" style="justify-content:flex-end;margin-bottom:6px;"></div>
@@ -263,26 +289,44 @@ canvas{max-width:100%;}
     </div>
   </div>
   <div class="tabs">
-    <button class="tab-btn active" data-view="home">首頁 Dashboard</button>
+    <button class="tab-btn active" data-view="teacher">教師 Dashboard</button>
+    <button class="tab-btn" data-view="home">首頁 Dashboard</button>
     <button class="tab-btn" data-view="record">個人學習紀錄</button>
     <button class="tab-btn" data-view="admin">管理者 Dashboard</button>
     <button class="tab-btn" data-view="charts">圖表分析</button>
+    <button class="tab-btn" data-view="flow">流程與狀態機</button>
     <button class="tab-btn" data-view="quiz">閱讀測驗</button>
     <button class="tab-btn" data-view="profile">個人資料</button>
   </div>
+  <!-- ============ 教師 Dashboard ============ -->
+  <div class="view active" id="view-teacher">
+    <div class="section-label">學習卡片</div>
+    <div class="card-row cols-4">
+      <div class="stat-card"><div class="label">📚 可閱讀書籍</div><div class="value">50 本</div></div>
+      <div class="stat-card"><div class="label">📖 已閱讀</div><div class="value">32 本</div></div>
+      <div class="stat-card"><div class="label">📝 已完成課前測驗</div><div class="value">30 份</div></div>
+      <div class="stat-card"><div class="label">✅ 已完成課後測驗</div><div class="value">28 份</div></div>
+    </div>
+    <div class="section-label">統計卡片</div>
+    <div class="card-row cols-3">
+      <div class="stat-card"><div class="label">平均課前</div><div class="value before">70 分</div></div>
+      <div class="stat-card"><div class="label">平均課後</div><div class="value after">91 分</div></div>
+      <div class="stat-card"><div class="label">平均進步</div><div class="value gain">+21 分</div><div class="sub">已排除 skipped / not_required 紀錄</div></div>
+    </div>
+    <div class="panel">
+      <h3>近期待辦</h3>
+      <table>
+        <thead><tr><th>書籍</th><th>狀態</th><th>動作</th></tr></thead>
+        <tbody>
+          <tr><td>《教學評量設計入門》</td><td><span class="badge orange">課前測驗 in_progress</span></td><td>繼續作答</td></tr>
+          <tr><td>《差異化教學策略》</td><td><span class="badge gray">尚未開始閱讀</span></td><td>開始課前測驗</td></tr>
+          <tr><td>《班級經營實務》</td><td><span class="badge green">已完成閱讀，待課後測驗</span></td><td>開始課後測驗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
   <!-- ============ 首頁 Dashboard ============ -->
-  <div class="view active" id="view-home">
-    <div class="section-label">本週讀書會教材</div>
-    <a href="PreTest/TheExtremeOwnership.html" class="panel" style="display:block;padding:0;overflow:hidden;text-decoration:none;color:inherit;">
-      <img src="images/極端責任_企業領導秘訣.png" alt="責無旁貸，由海軍陸戰隊來看教育" style="width:100%;display:block;">
-      <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div>
-          <div style="font-family:var(--font-display);font-size:17px;font-weight:700;">責無旁貸，由海軍陸戰隊來看教育</div>
-          <div style="font-size:12.5px;color:var(--ink-soft);margin-top:4px;">點選前往課前測驗</div>
-        </div>
-        <span class="badge green">開始課前測驗 →</span>
-      </div>
-    </a>
+  <div class="view" id="view-home">
     <div class="section-label">課前測驗統計卡片</div>
     <div class="card-row cols-3">
       <div class="stat-card"><div class="label">已完成</div><div class="value after">35</div></div>
@@ -309,56 +353,35 @@ canvas{max-width:100%;}
   </div>
   <!-- ============ 管理者 Dashboard ============ -->
   <div class="view" id="view-admin">
-    <div class="panel" id="adminLockPanel">
-      <h3>🔒 管理者密碼保護</h3>
-      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-6px;">請輸入管理者密碼以檢視管理者 Dashboard。</p>
-      <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;">
-        <input type="password" id="adminPasswordInput" class="quiz-name-input" placeholder="請輸入密碼" style="max-width:none;">
-      </div>
-      <button class="gsi-btn" id="adminUnlockBtn" style="margin-top:12px;">解鎖</button>
-      <div class="sync-status" id="adminLockStatus"></div>
+    <div class="section-label">課前完成率</div>
+    <div class="card-row cols-2">
+      <div class="stat-card"><div class="label">已完成</div><div class="value after">35 人 (70%)</div></div>
+      <div class="stat-card"><div class="label">未完成</div><div class="value">15 人 (30%)</div></div>
     </div>
-    <div id="adminContent" class="app-hidden">
-      <div class="section-label">課前完成率</div>
-      <div class="card-row cols-2">
-        <div class="stat-card"><div class="label">已完成</div><div class="value after">35 人 (70%)</div></div>
-        <div class="stat-card"><div class="label">未完成</div><div class="value">15 人 (30%)</div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h3 style="margin:0;">課前平均分數比較</h3>
-          <div class="toggle-group" id="dim-toggle">
-            <button class="active" data-dim="dept">部門</button>
-            <button data-dim="teacher">教師</button>
-            <button data-dim="book">書籍</button>
-          </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3 style="margin:0;">課前平均分數比較</h3>
+        <div class="toggle-group" id="dim-toggle">
+          <button class="active" data-dim="dept">部門</button>
+          <button data-dim="teacher">教師</button>
+          <button data-dim="book">書籍</button>
         </div>
-        <div class="bar-chart" id="dim-chart"></div>
       </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h3 style="margin:0;">學習成長排行榜</h3>
-          <div class="toggle-group" id="rank-toggle">
-            <button class="active" data-rank="abs">絕對進步</button>
-            <button data-rank="norm">標準化進步率</button>
-          </div>
+      <div class="bar-chart" id="dim-chart"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3 style="margin:0;">學習成長排行榜</h3>
+        <div class="toggle-group" id="rank-toggle">
+          <button class="active" data-rank="abs">絕對進步</button>
+          <button data-rank="norm">標準化進步率</button>
         </div>
-        <table>
-          <thead><tr><th>排名</th><th>教師</th><th>課前</th><th>課後</th><th>絕對進步</th><th>標準化進步率</th></tr></thead>
-          <tbody id="rank-body"></tbody>
-        </table>
-        <div class="note">標準化進步率 = 進步分數 ÷ (100 − 課前分數)。課前分數已偏高者，絕對進步分數受天花板效應限制，建議切換檢視兩種排序。</div>
       </div>
-      <div class="panel">
-        <h3>🔑 密碼管理</h3>
-        <p class="note" style="margin-top:0;">在此新增可用於解鎖管理者 Dashboard 的密碼。此清單僅保存於目前的瀏覽階段，重新整理頁面後將重設為預設密碼清單。</p>
-        <div style="display:flex;gap:10px;max-width:380px;margin-bottom:14px;flex-wrap:wrap;">
-          <input type="text" id="newAdminPasswordInput" class="quiz-name-input" placeholder="輸入新密碼" style="max-width:none;flex:1;min-width:180px;">
-          <button class="quiz-submit-btn" id="addAdminPasswordBtn" style="margin:0;white-space:nowrap;">新增密碼</button>
-        </div>
-        <div style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin-bottom:8px;">目前可用密碼</div>
-        <div id="adminPasswordList"></div>
-      </div>
+      <table>
+        <thead><tr><th>排名</th><th>教師</th><th>課前</th><th>課後</th><th>絕對進步</th><th>標準化進步率</th></tr></thead>
+        <tbody id="rank-body"></tbody>
+      </table>
+      <div class="note">標準化進步率 = 進步分數 ÷ (100 − 課前分數)。課前分數已偏高者，絕對進步分數受天花板效應限制，建議切換檢視兩種排序。</div>
     </div>
   </div>
   <!-- ============ 圖表分析 ============ -->
@@ -385,48 +408,116 @@ canvas{max-width:100%;}
       <canvas id="bookChart" height="100"></canvas>
     </div>
   </div>
+  <!-- ============ 流程與狀態機 ============ -->
+  <div class="view" id="view-flow">
+    <div class="panel">
+      <h3>課前測驗紀錄狀態機</h3>
+      <div class="fsm">
+        <div class="fsm-node start">not_started</div>
+        <div class="fsm-arrow">開始作答 →</div>
+        <div class="fsm-node">in_progress</div>
+        <div class="fsm-arrow">繳交 →</div>
+        <div class="fsm-node end">completed</div>
+      </div>
+      <div class="fsm" style="padding-top:0;">
+        <div class="fsm-node skip">skipped</div>
+        <div class="fsm-arrow">非必須・教師選擇跳過</div>
+      </div>
+      <div class="fsm" style="padding-top:0;">
+        <div class="fsm-node skip">not_required</div>
+        <div class="fsm-arrow">該書未設定課前測驗</div>
+      </div>
+      <div class="note">
+        ⚠ <code>in_progress</code> 逾時行為（自動繳交 / 作廢需重作）需於後台設定中明確定義，並計入「作答次數」。<br>
+        ⚠ <code>skipped</code> 與 <code>not_required</code> 紀錄不納入學習成效統計，避免分母失真。
+      </div>
+    </div>
+    <div class="panel">
+      <h3>閱讀流程（書籍層級判斷）</h3>
+      <table>
+        <thead><tr><th>條件</th><th>結果</th></tr></thead>
+        <tbody>
+          <tr><td>未設定課前測驗</td><td>跳過，標記 <span class="badge gray">not_required</span></td></tr>
+          <tr><td>設定為「必須」且未完成</td><td>無法進入閱讀教材頁面</td></tr>
+          <tr><td>設定為「非必須」且選擇跳過</td><td>標記 <span class="badge gray">skipped</span>，不納入學習成效統計</td></tr>
+          <tr><td>已完成課前測驗</td><td>可進入閱讀教材頁面</td></tr>
+        </tbody>
+      </table>
+      <div class="note">「通過標準」為診斷性質，僅用於顯示基礎程度（低／中／高），不應用來阻擋進入閱讀流程。</div>
+    </div>
+  </div>
   <!-- ============ 閱讀測驗 ============ -->
   <div class="view" id="view-quiz">
-    <div class="section-label">用海軍陸戰隊看教育</div>
-    <div class="panel">
-      <h3>📖 用海軍陸戰隊看教育</h3>
-      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-8px;">先觀看影片，再前往課後測驗</p>
-      <div style="margin-bottom:22px;">
-        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">教學影片連結（可新增多部）</label>
-        <div id="ownershipVideoListDisplay" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="text" id="ownershipVideoNameInput" class="quiz-name-input" placeholder="影片名稱（例如：第1集）" style="max-width:180px;flex:1;min-width:140px;">
-          <input type="text" id="ownershipVideoUrlInput" class="quiz-name-input" placeholder="貼上 YouTube 影片網址" style="max-width:360px;flex:2;min-width:200px;">
-          <button type="button" class="quiz-reset-btn" id="ownershipVideoAddBtn" style="margin:0;">新增影片</button>
+
+    <!-- 書籍卡片選單 -->
+    <div class="section-label">選擇書目</div>
+    <div class="card-row cols-2" style="margin-bottom:28px;">
+
+      <!-- 卡片 1：非暴力溝通（開放） -->
+      <div class="book-card" id="card-nvc" onclick="selectBook('nvc')">
+        <div class="book-card-icon">📖</div>
+        <div class="book-card-title">國小補習班 × 非暴力溝通</div>
+        <div class="book-card-meta">10 題情境測驗</div>
+        <span class="badge green" style="margin-top:8px;">開放中</span>
+      </div>
+
+      <!-- 卡片 2：被討厭的勇氣（管理者密碼鎖） -->
+      <div class="book-card locked" id="card-courage" onclick="tryUnlockBook('courage')">
+        <div class="book-card-icon">🔒</div>
+        <div class="book-card-title">被討厭的勇氣</div>
+        <div class="book-card-meta">10 題情境測驗</div>
+        <span class="badge orange" style="margin-top:8px;">需管理者密碼</span>
+      </div>
+    </div>
+
+    <!-- 密碼解鎖彈窗 -->
+    <div class="modal-overlay app-hidden" id="pwModal">
+      <div class="modal-box">
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:6px;">🔒 管理者密碼</div>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;">請輸入管理者密碼以開啟「被討厭的勇氣」測驗。</p>
+        <input type="password" id="pwInput" class="quiz-name-input" placeholder="輸入密碼" style="max-width:none;margin-bottom:10px;">
+        <div style="display:flex;gap:8px;">
+          <button class="quiz-submit-btn" style="flex:1;" onclick="confirmPassword()">確認</button>
+          <button class="quiz-reset-btn" style="margin:0;flex:1;" onclick="closeModal()">取消</button>
         </div>
-        <div class="sync-status" id="ownershipVideoSyncStatus"></div>
+        <div class="sync-status" id="pwStatus"></div>
       </div>
-      <a href="AfterReadingQuiz/AfterReadingTheExtremeOwnership.html" class="quiz-submit-btn" style="display:inline-block;text-decoration:none;">前往課後測驗 →</a>
     </div>
-    <div class="panel">
-      <h3>📖 閱讀測驗｜國小補習班 × 非暴力溝通</h3>
-      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-8px;">先觀看影片，再完成下方十題測驗</p>
-      <div style="margin-bottom:16px;">
-        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">姓名（取自登入帳號）</label>
-        <div class="quiz-name-input" id="quizNameDisplay" style="display:flex;align-items:center;color:var(--ink-soft);">尚未登入</div>
+
+    <!-- 測驗面板（動態切換） -->
+    <div id="quizPanel" class="app-hidden">
+      <div class="panel">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <button class="quiz-reset-btn" style="margin:0;padding:6px 12px;font-size:12px;" onclick="backToCards()">← 返回書目</button>
+          <h3 style="margin:0;" id="quizPanelTitle"></h3>
+        </div>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:4px 0 16px;" id="quizPanelSub">先觀看影片，再完成下方十題測驗</p>
+
+        <div style="margin-bottom:16px;">
+          <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">姓名（取自登入帳號）</label>
+          <div class="quiz-name-input" id="quizNameDisplay" style="display:flex;align-items:center;color:var(--ink-soft);">尚未登入</div>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">閱讀影片連結</label>
+          <a class="quiz-video-link" id="quizVideoLink" href="#" target="_blank" rel="noopener">▶ 點此前往 YouTube 觀看影片</a>
+        </div>
+
+        <form id="quizForm">
+          <div id="quizQuestions"></div>
+          <button type="submit" class="quiz-submit-btn">送出測驗</button>
+        </form>
       </div>
-      <div style="margin-bottom:22px;">
-        <label style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);display:block;margin-bottom:6px;">閱讀影片連結</label>
-        <a class="quiz-video-link" href="https://www.youtube.com/watch?v=TboRxGEF-Q4" target="_blank" rel="noopener">▶ 點此前往 YouTube 觀看影片</a>
+
+      <div class="panel quiz-result" id="quizResult">
+        <h3>測驗結果</h3>
+        <div class="card-row cols-3">
+          <div class="stat-card"><div class="label">答對題數</div><div class="value before" id="quizCorrectCount">-</div></div>
+          <div class="stat-card"><div class="label">本次得分</div><div class="value gain" id="quizThisScore">-</div></div>
+          <div class="stat-card"><div class="label">累積總分</div><div class="value after" id="quizCumScore">-</div></div>
+        </div>
+        <div class="sync-status" id="sheetSyncStatus"></div>
       </div>
-      <form id="quizForm">
-        <div id="quizQuestions"></div>
-        <button type="submit" class="quiz-submit-btn">送出測驗</button>
-      </form>
-    </div>
-    <div class="panel quiz-result" id="quizResult">
-      <h3>測驗結果</h3>
-      <div class="card-row cols-3">
-        <div class="stat-card"><div class="label">答對題數</div><div class="value before" id="quizCorrectCount">-</div></div>
-        <div class="stat-card"><div class="label">本次得分</div><div class="value gain" id="quizThisScore">-</div></div>
-        <div class="stat-card"><div class="label">累積總分</div><div class="value after" id="quizCumScore">-</div></div>
-      </div>
-      <div class="sync-status" id="sheetSyncStatus"></div>
     </div>
   </div>
   <!-- ============ 個人資料 ============ -->
@@ -638,118 +729,166 @@ new Chart(document.getElementById('bookChart'), {
     }
   }
 });
-// ---------- 閱讀測驗（國小補習班 × 非暴力溝通）----------
-const quizQuestions = [
-  {q:"1. 小華在補習班數學考差了，老師說：「你怎麼又考這麼差，是不是都沒在聽課？」請問用非暴力溝通的方式，老師更適合怎麼說？",
-   opts:[
-     "「你怎麼又考這麼差，是不是都沒在聽課？」",
-     "「我看到這次考卷有不少題目錯了，我有點擔心，是不是哪個觀念還不太懂？我們一起看看好嗎？」",
-     "「再考這麼差，下次就不要來上課了。」",
-     "「全班只有你考不好，要加油一點。」"
-   ], answer:1},
-  {q:"2. 下課時，同學小傑一直插嘴打斷正在發言的小美。小美感到很生氣，用非暴力溝通表達感受時，最適合的說法是？",
-   opts:[
-     "「你很沒禮貌耶，每次都打斷我！」",
-     "「你是不是討厭我才一直打斷我說話？」",
-     "「當你打斷我說話時，我覺得有點難過，因為我也想把話說完，可以等我說完再說嗎？」",
-     "「閉嘴啦，輪到我說了！」"
-   ], answer:2},
-  {q:"3. 阿明因為功課太多覺得壓力很大，跟補習班老師抱怨。老師用非暴力溝通回應，下列何者最恰當？",
-   opts:[
-     "「大家功課都一樣多，不要找藉口。」",
-     "「我聽到你說功課很多，覺得壓力很大，這樣的感覺我能理解，我們一起看看怎麼安排時間，好嗎？」",
-     "「功課多是為你好，你應該要忍耐。」",
-     "「你就是太懶惰才會覺得累。」"
-   ], answer:1},
-  {q:"4. 兩位同學因為搶同一枝筆吵起來，老師想用非暴力溝通幫忙化解，下列何者最適合？",
-   opts:[
-     "「你們兩個都不准用這枝筆了！」",
-     "「是誰先搶的，給我說清楚！」",
-     "「我看到你們兩個都很想用這枝筆，能不能告訴我，你們現在的感受，還有需要這枝筆做什麼呢？」",
-     "「吵架的人都要被處罰。」"
-   ], answer:2},
-  {q:"5. 小芸寫作業時常常分心，媽媽接她下課時很生氣地說了重話。如果媽媽想用非暴力溝通表達，比較適合的說法是？",
-   opts:[
-     "「你又在發呆了，到底要講幾次！」",
-     "「我看到你寫作業常常分心，我有點擔心會影響進度，我們可以一起想想怎麼讓你更專心嗎？」",
-     "「你就是不認真，難怪成績不好。」",
-     "「再分心就不准下課休息。」"
-   ], answer:1},
-  {q:"6. 補習班同學嘲笑小宇字寫得醜，小宇覺得很受傷。用非暴力溝通的方式，小宇可以怎麼表達自己的感受？",
-   opts:[
-     "「你才醜咧！」然後動手推對方",
-     "默默忍耐，什麼都不說",
-     "「當你笑我字寫得醜的時候，我覺得很難過，因為我也很努力在練習，希望你可以不要這樣說。」",
-     "跟其他同學一起排擠對方"
-   ], answer:2},
-  {q:"7. 老師發現小傑沒寫作業，想了解原因而不是直接責罵，下列哪一種問法符合非暴力溝通的精神？",
-   opts:[
-     "「你又沒寫作業，是不是想被處罰？」",
-     "「我注意到你今天沒有交作業，發生了什麼事呢？我想知道是不是有什麼困難。」",
-     "「沒寫作業的人通通留下來補寫，不准休息。」",
-     "「你就是懶，每次都這樣。」"
-   ], answer:1},
-  {q:"8. 小美考試成績進步了，但好朋友小婷因為退步而心情不好。小美想關心小婷，下列哪句話最符合非暴力溝通的「同理」精神？",
-   opts:[
-     "「你看我都進步了，你怎麼還退步？」",
-     "「你是不是都沒在念書？」",
-     "「我看你今天好像不太開心，是不是因為這次考試的關係？想聊聊嗎？」",
-     "「退步又沒關係，不用想太多啦。」（敷衍帶過）"
-   ], answer:2},
-  {q:"9. 補習班下課時間到了，但老師還想多講一點進度，部分同學開始抱怨。老師用非暴力溝通回應同學的需求，下列何者最適當？",
-   opts:[
-     "「不准抱怨，老師說了算！」",
-     "「我知道大家已經累了，也很期待下課，我還有一點點重要的內容想講完，可以再給我五分鐘嗎？」",
-     "「再吵就通通留下來加課。」",
-     "「你們這麼不專心，難怪成績不好。」"
-   ], answer:1},
-  {q:"10. 非暴力溝通強調表達時通常包含「觀察、感受、需要、請求」四個步驟。下列哪一句話最完整地運用了這四個步驟？",
-   opts:[
-     "「你每次都遲到，真的很沒責任感！」",
-     "「我看到你這週有三天遲到（觀察），我有點擔心（感受），因為我希望大家都能順利上到完整的課程（需要），下次可以提早五分鐘出門嗎？（請求）」",
-     "「遲到的人通通要被記點處罰。」",
-     "「反正你本來就常常遲到，不意外。」"
-   ], answer:1},
-];
-const quizContainer = document.getElementById("quizQuestions");
-quizQuestions.forEach((item, idx) => {
-  const div = document.createElement("div");
-  div.className = "quiz-question";
-  let optsHtml = item.opts.map((opt, i) => `
-    <label class="quiz-opt">
-      <input type="radio" name="qq${idx}" value="${i}" required>
-      <span>${opt}</span>
-    </label>`).join("");
-  div.innerHTML = `<p>${item.q}</p>${optsHtml}`;
-  quizContainer.appendChild(div);
-});
+
+// ---------- 書籍資料庫 ----------
+const ADMIN_PASSWORD = "admin2025"; // ← 管理者密碼，可自行修改
+
+const BOOKS = {
+  nvc: {
+    title: "📖 國小補習班 × 非暴力溝通",
+    video: "https://www.youtube.com/watch?v=TboRxGEF-Q4",
+    locked: false,
+    questions: [
+      {q:"1. 小華在補習班數學考差了，老師說：「你怎麼又考這麼差，是不是都沒在聽課？」請問用非暴力溝通的方式，老師更適合怎麼說？",
+       opts:["「你怎麼又考這麼差，是不是都沒在聽課？」","「我看到這次考卷有不少題目錯了，我有點擔心，是不是哪個觀念還不太懂？我們一起看看好嗎？」","「再考這麼差，下次就不要來上課了。」","「全班只有你考不好，要加油一點。」"], answer:1},
+      {q:"2. 下課時，同學小傑一直插嘴打斷正在發言的小美。小美感到很生氣，用非暴力溝通表達感受時，最適合的說法是？",
+       opts:["「你很沒禮貌耶，每次都打斷我！」","「你是不是討厭我才一直打斷我說話？」","「當你打斷我說話時，我覺得有點難過，因為我也想把話說完，可以等我說完再說嗎？」","「閉嘴啦，輪到我說了！」"], answer:2},
+      {q:"3. 阿明因為功課太多覺得壓力很大，跟補習班老師抱怨。老師用非暴力溝通回應，下列何者最恰當？",
+       opts:["「大家功課都一樣多，不要找藉口。」","「我聽到你說功課很多，覺得壓力很大，這樣的感覺我能理解，我們一起看看怎麼安排時間，好嗎？」","「功課多是為你好，你應該要忍耐。」","「你就是太懶惰才會覺得累。」"], answer:1},
+      {q:"4. 兩位同學因為搶同一枝筆吵起來，老師想用非暴力溝通幫忙化解，下列何者最適合？",
+       opts:["「你們兩個都不准用這枝筆了！」","「是誰先搶的，給我說清楚！」","「我看到你們兩個都很想用這枝筆，能不能告訴我，你們現在的感受，還有需要這枝筆做什麼呢？」","「吵架的人都要被處罰。」"], answer:2},
+      {q:"5. 小芸寫作業時常常分心，媽媽接她下課時很生氣地說了重話。如果媽媽想用非暴力溝通表達，比較適合的說法是？",
+       opts:["「你又在發呆了，到底要講幾次！」","「我看到你寫作業常常分心，我有點擔心會影響進度，我們可以一起想想怎麼讓你更專心嗎？」","「你就是不認真，難怪成績不好。」","「再分心就不准下課休息。」"], answer:1},
+      {q:"6. 補習班同學嘲笑小宇字寫得醜，小宇覺得很受傷。用非暴力溝通的方式，小宇可以怎麼表達自己的感受？",
+       opts:["「你才醜咧！」然後動手推對方","默默忍耐，什麼都不說","「當你笑我字寫得醜的時候，我覺得很難過，因為我也很努力在練習，希望你可以不要這樣說。」","跟其他同學一起排擠對方"], answer:2},
+      {q:"7. 老師發現小傑沒寫作業，想了解原因而不是直接責罵，下列哪一種問法符合非暴力溝通的精神？",
+       opts:["「你又沒寫作業，是不是想被處罰？」","「我注意到你今天沒有交作業，發生了什麼事呢？我想知道是不是有什麼困難。」","「沒寫作業的人通通留下來補寫，不准休息。」","「你就是懶，每次都這樣。」"], answer:1},
+      {q:"8. 小美考試成績進步了，但好朋友小婷因為退步而心情不好。小美想關心小婷，下列哪句話最符合非暴力溝通的「同理」精神？",
+       opts:["「你看我都進步了，你怎麼還退步？」","「你是不是都沒在念書？」","「我看你今天好像不太開心，是不是因為這次考試的關係？想聊聊嗎？」","「退步又沒關係，不用想太多啦。」（敷衍帶過）"], answer:2},
+      {q:"9. 補習班下課時間到了，但老師還想多講一點進度，部分同學開始抱怨。老師用非暴力溝通回應同學的需求，下列何者最適當？",
+       opts:["「不准抱怨，老師說了算！」","「我知道大家已經累了，也很期待下課，我還有一點點重要的內容想講完，可以再給我五分鐘嗎？」","「再吵就通通留下來加課。」","「你們這麼不專心，難怪成績不好。」"], answer:1},
+      {q:"10. 非暴力溝通強調表達時通常包含「觀察、感受、需要、請求」四個步驟。下列哪一句話最完整地運用了這四個步驟？",
+       opts:["「你每次都遲到，真的很沒責任感！」","「我看到你這週有三天遲到（觀察），我有點擔心（感受），因為我希望大家都能順利上到完整的課程（需要），下次可以提早五分鐘出門嗎？（請求）」","「遲到的人通通要被記點處罰。」","「反正你本來就常常遲到，不意外。」"], answer:1},
+    ]
+  },
+  courage: {
+    title: "📗 被討厭的勇氣",
+    video: "https://www.youtube.com/results?search_query=被討厭的勇氣", // ← 可替換為正確影片網址
+    locked: true,
+    questions: [
+      {q:"1. 阿德勒心理學認為，人的煩惱來源是什麼？",
+       opts:["遺傳與環境決定的性格缺陷","過去的創傷與童年經歷","所有的煩惱都來自人際關係","命運與運氣的安排"], answer:2},
+      {q:"2. 「課題分離」的核心概念是指？",
+       opts:["把自己的課題強加給別人","區分哪些是自己的課題、哪些是別人的課題，不干涉他人課題","把所有課題都推給他人","要求別人幫自己解決所有問題"], answer:1},
+      {q:"3. 書中提到「被討厭的勇氣」是指？",
+       opts:["故意惹人討厭來彰顯個性","為了活出自我而接受可能被人討厭的事實","對所有人都採取不友善的態度","拒絕與任何人建立關係"], answer:1},
+      {q:"4. 阿德勒認為「自卑感」的正確用途是什麼？",
+       opts:["代表自己一無是處，應當放棄努力","是一種客觀評估自身不足並作為成長動力的感受","是需要向他人炫耀來掩蓋的弱點","自卑感只會帶來傷害，應完全消除"], answer:1},
+      {q:"5. 關於「目的論」與「原因論」，以下何者符合阿德勒的觀點？",
+       opts:["人的行為完全由過去的原因決定（原因論）","人的行為是為了達成某種目的而選擇的（目的論）","過去的原因和未來的目的同等重要","行為沒有原因也沒有目的"], answer:1},
+      {q:"6. 書中提到獲得「幸福」的關鍵是什麼？",
+       opts:["獲得他人的認可與讚美","贏過他人、站在社會競爭頂端","貢獻感：感受到自己對他人有所貢獻","累積財富與社會地位"], answer:2},
+      {q:"7. 關於「人生的謊言」，書中的意思是？",
+       opts:["為了善意而說謊是被允許的","為了逃避課題而找藉口，欺騙自己不去改變","必須對所有人誠實，包括說出令人痛苦的實話","謊言是人際關係中不可避免的工具"], answer:1},
+      {q:"8. 阿德勒認為，「追求優越性」最健康的表現方式是什麼？",
+       opts:["打敗競爭對手，超越他人","在縱向關係中讓自己位於最高位置","透過與「理想中的自己」比較，持續自我成長","讓別人覺得自己很厲害"], answer:2},
+      {q:"9. 書中對於「人際關係」的最終理想形態為何？",
+       opts:["建立讓自己永遠獲勝的競爭關係","構築縱向關係，讓他人服從自己","以「共同體感覺」為基礎的橫向、夥伴式關係","盡量減少人際關係以避免衝突"], answer:2},
+      {q:"10. 「不是能力問題，而是勇氣問題」這句話在書中最接近的意涵是？",
+       opts:["人只要有勇氣就能解決所有能力不足的問題","改變與否，取決於是否有勇氣選擇改變，而非能力高低","勇氣比知識、技術更重要","只要敢說敢做就一定能成功"], answer:1},
+    ]
+  }
+};
+
+// ---------- 書籍卡片控制 ----------
+let currentBookKey = null;
 let quizCumulativeScore = 0;
+
+function selectBook(key){
+  currentBookKey = key;
+  const book = BOOKS[key];
+  document.getElementById("quizPanel").classList.remove("app-hidden");
+  document.getElementById("quizPanelTitle").textContent = book.title;
+  document.getElementById("quizVideoLink").href = book.video;
+  document.getElementById("quizResult").style.display = "none";
+  renderQuizQuestions(book.questions);
+  document.getElementById("quizPanel").scrollIntoView({behavior:"smooth"});
+}
+
+function backToCards(){
+  document.getElementById("quizPanel").classList.add("app-hidden");
+  currentBookKey = null;
+}
+
+function tryUnlockBook(key){
+  document.getElementById("pwInput").value = "";
+  document.getElementById("pwStatus").textContent = "";
+  document.getElementById("pwStatus").className = "sync-status";
+  document.getElementById("pwModal").classList.remove("app-hidden");
+  document.getElementById("pwInput").focus();
+  // 記住要解鎖的書
+  document.getElementById("pwModal").dataset.target = key;
+}
+
+function confirmPassword(){
+  const input = document.getElementById("pwInput").value;
+  const key = document.getElementById("pwModal").dataset.target;
+  if(input === ADMIN_PASSWORD){
+    closeModal();
+    selectBook(key);
+  } else {
+    const s = document.getElementById("pwStatus");
+    s.textContent = "❌ 密碼錯誤，請再試一次";
+    s.className = "sync-status err";
+    document.getElementById("pwInput").value = "";
+    document.getElementById("pwInput").focus();
+  }
+}
+
+function closeModal(){
+  document.getElementById("pwModal").classList.add("app-hidden");
+}
+
+// Enter 鍵直接確認密碼
+document.getElementById("pwInput").addEventListener("keydown", function(e){
+  if(e.key === "Enter") confirmPassword();
+});
+
+function renderQuizQuestions(questions){
+  const container = document.getElementById("quizQuestions");
+  container.innerHTML = "";
+  document.getElementById("quizForm").reset();
+  questions.forEach((item, idx) => {
+    const div = document.createElement("div");
+    div.className = "quiz-question";
+    let optsHtml = item.opts.map((opt, i) => `
+      <label class="quiz-opt">
+        <input type="radio" name="qq${idx}" value="${i}" required>
+        <span>${opt}</span>
+      </label>`).join("");
+    div.innerHTML = `<p>${item.q}</p>${optsHtml}`;
+    container.appendChild(div);
+  });
+}
+
 function correctCountToScore(count){
   if(count <= 5) return 0;
   const map = {6:10, 7:20, 8:30, 9:40, 10:50};
   return map[count] || 0;
 }
+
 document.getElementById("quizForm").addEventListener("submit", function(e){
   e.preventDefault();
   if(!currentUser){
-    alert("請先使用 Google 帳號登入");
+    alert("請先登入");
     return;
   }
-  const name = currentUser.name;
+  const questions = BOOKS[currentBookKey].questions;
   let correct = 0;
-  quizQuestions.forEach((item, idx) => {
+  questions.forEach((item, idx) => {
     const selected = document.querySelector(`input[name="qq${idx}"]:checked`);
-    if(selected && parseInt(selected.value) === item.answer){
-      correct++;
-    }
+    if(selected && parseInt(selected.value) === item.answer) correct++;
   });
+
   const thisScore = correctCountToScore(correct);
   quizCumulativeScore += thisScore;
+
   document.getElementById("quizCorrectCount").textContent = `${correct} / 10`;
   document.getElementById("quizThisScore").textContent = `${thisScore} 分`;
-  document.getElementById("quizCumScore").textContent = `${quizCumulativeScore} 分（${name}）`;
+  document.getElementById("quizCumScore").textContent = `${quizCumulativeScore} 分（${currentUser.name}）`;
   document.getElementById("quizResult").style.display = "block";
   document.getElementById("quizResult").scrollIntoView({behavior:"smooth"});
+
   appendRecordToSheet({
     timestamp: new Date().toLocaleString('zh-TW'),
     name: currentUser.name,
@@ -759,23 +898,24 @@ document.getElementById("quizForm").addEventListener("submit", function(e){
     cumulativeScore: quizCumulativeScore
   });
 });
-function resetCumulative(){
-  quizCumulativeScore = 0;
-  document.getElementById("quizCumScore").textContent = "0 分";
-  alert("累積分數已重設為 0（注意：Google 試算表中的歷史紀錄不會被刪除）");
-}
+
+
 /* =======================================================
    簡易登入 + Google 試算表同步（透過 Apps Script Web App，不需 Google Cloud）
    ======================================================= */
+
 // ⚠️ 只需要這一個設定：把你在 Google 試算表「擴充功能 → Apps Script」部署出來的
 // Web App 網址貼在這裡（格式類似 https://script.google.com/macros/s/xxxxx/exec）
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpme1PMUpVZmT5E4IBwOEr8W6ly7PdU0vtXuURQ38GE6JMJwmyqb5BoqAHxHcBoks/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9liHlrjyh9lfzEF_3g5OnJ_IYSZPefavGS121xK9wa2rkbefVAK8QppoCrZvs4Q/exec";
+
 let currentUser = null; // {name, email}
+
 function initials(name){
   if(!name) return "?";
   const trimmed = name.trim();
   return trimmed.length <= 2 ? trimmed : trimmed.slice(0,1);
 }
+
 document.getElementById("simpleLoginBtn").addEventListener("click", () => {
   const name = document.getElementById("loginName").value.trim();
   const email = document.getElementById("loginEmail").value.trim();
@@ -794,42 +934,32 @@ document.getElementById("simpleLoginBtn").addEventListener("click", () => {
   statusEl.textContent = "";
   onLoginSuccess();
 });
-const BRC_USER_KEY = "brc_current_user"; // 讀書會共用登入資訊，供其他測驗頁面（如課後測驗）讀取
 
 function onLoginSuccess(){
   document.getElementById("loginGate").classList.add("app-hidden");
   document.getElementById("appShell").classList.remove("app-hidden");
+
   document.getElementById("userChip").innerHTML =
     `<div class="avatar-circle">${initials(currentUser.name)}</div><span>${currentUser.name}（${currentUser.email}）</span>`;
+
   document.getElementById("quizNameDisplay").textContent = currentUser.name;
+
   document.getElementById("profileAvatar").textContent = initials(currentUser.name);
   document.getElementById("profileName").textContent = currentUser.name;
   document.getElementById("profileEmail").textContent = currentUser.email;
-  try{ localStorage.setItem(BRC_USER_KEY, JSON.stringify(currentUser)); }catch(e){}
+
   loadRecordsFromSheet();
 }
-// 進站時若先前已登入過（localStorage 有紀錄），自動帶入，不需重新輸入姓名/Email
-(function tryAutoLogin(){
-  try{
-    const saved = localStorage.getItem(BRC_USER_KEY);
-    if(saved){
-      const parsed = JSON.parse(saved);
-      if(parsed && parsed.name && parsed.email){
-        currentUser = parsed;
-        onLoginSuccess();
-      }
-    }
-  }catch(e){}
-})();
+
 document.getElementById("logoutBtn").addEventListener("click", () => {
   currentUser = null;
-  try{ localStorage.removeItem(BRC_USER_KEY); }catch(e){}
   document.getElementById("appShell").classList.add("app-hidden");
   document.getElementById("loginGate").classList.remove("app-hidden");
   document.getElementById("loginName").value = "";
   document.getElementById("loginEmail").value = "";
   document.getElementById("loginStatus").textContent = "";
 });
+
 // 將一筆測驗紀錄寫入 Google 試算表（透過 Apps Script Web App，GET 請求避免 CORS 預檢問題）
 async function appendRecordToSheet(record){
   const statusEl = document.getElementById("sheetSyncStatus");
@@ -860,6 +990,7 @@ async function appendRecordToSheet(record){
     statusEl.className = "sync-status err";
   }
 }
+
 // 從 Google 試算表讀取目前使用者的歷史紀錄
 async function loadRecordsFromSheet(){
   const statusEl = document.getElementById("profileSyncStatus");
@@ -891,134 +1022,8 @@ async function loadRecordsFromSheet(){
     statusEl.className = "sync-status err";
   }
 }
+
 document.getElementById("refreshRecordsBtn").addEventListener("click", loadRecordsFromSheet);
-/* =======================================================
-   管理者 Dashboard 密碼保護 + 密碼管理
-   ======================================================= */
-let adminPasswords = ["jimmy", "sweetie", "Muse0505"];
-let adminAuthenticated = false;
-function renderAdminPasswordList(){
-  const wrap = document.getElementById("adminPasswordList");
-  wrap.innerHTML = adminPasswords.map(p => `<span class="tag-chip">${p}</span>`).join(' ');
-}
-document.getElementById("adminUnlockBtn").addEventListener("click", () => {
-  const val = document.getElementById("adminPasswordInput").value;
-  const statusEl = document.getElementById("adminLockStatus");
-  if(adminPasswords.includes(val)){
-    adminAuthenticated = true;
-    document.getElementById("adminLockPanel").classList.add("app-hidden");
-    document.getElementById("adminContent").classList.remove("app-hidden");
-    document.getElementById("adminPasswordInput").value = "";
-    statusEl.textContent = "";
-    renderAdminPasswordList();
-  }else{
-    statusEl.textContent = "❌ 密碼錯誤，請再試一次";
-    statusEl.className = "sync-status err";
-  }
-});
-document.getElementById("adminPasswordInput").addEventListener("keydown", (e) => {
-  if(e.key === "Enter"){
-    document.getElementById("adminUnlockBtn").click();
-  }
-});
-document.getElementById("addAdminPasswordBtn").addEventListener("click", () => {
-  const input = document.getElementById("newAdminPasswordInput");
-  const val = input.value.trim();
-  if(!val) return;
-  if(adminPasswords.includes(val)){
-    alert("此密碼已存在");
-    return;
-  }
-  adminPasswords.push(val);
-  input.value = "";
-  renderAdminPasswordList();
-});
-/* =======================================================
-   「用海軍陸戰隊看教育」教學影片清單：可新增多部，並同步至 Google 試算表
-   （沿用同一個 APPS_SCRIPT_URL，新增 getSetting / setSetting 兩個 action，
-   整份清單以 JSON 字串存在單一 key：ownership_video_links）
-   ======================================================= */
-const OWNERSHIP_VIDEO_KEY = "ownership_video_links";
-let ownershipVideos = []; // [{name, url}, ...]
-function renderOwnershipVideoList(){
-  const wrap = document.getElementById("ownershipVideoListDisplay");
-  if(ownershipVideos.length === 0){
-    wrap.innerHTML = `<div style="font-size:13px;color:var(--ink-soft);">尚未新增任何影片連結</div>`;
-    return;
-  }
-  wrap.innerHTML = ownershipVideos.map((v, i) => `
-    <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:5px;padding:8px 12px;">
-      <a class="quiz-video-link" href="${v.url}" target="_blank" rel="noopener" style="flex:1;">▶ ${v.name || ('影片 ' + (i+1))}</a>
-      <button type="button" class="logout-link" data-idx="${i}" onclick="removeOwnershipVideo(${i})">刪除</button>
-    </div>
-  `).join('');
-}
-async function loadOwnershipVideoLinks(){
-  const statusEl = document.getElementById("ownershipVideoSyncStatus");
-  if(APPS_SCRIPT_URL.startsWith("YOUR_")) return;
-  try{
-    const params = new URLSearchParams({ action: "getSetting", key: OWNERSHIP_VIDEO_KEY });
-    const res = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
-    const data = await res.json();
-    if(res.ok && data.status === "ok" && data.value){
-      try{ ownershipVideos = JSON.parse(data.value) || []; }catch(e){ ownershipVideos = []; }
-      renderOwnershipVideoList();
-      statusEl.textContent = "✅ 已從 Google 試算表載入影片清單";
-      statusEl.className = "sync-status ok";
-    }else{
-      renderOwnershipVideoList();
-    }
-  }catch(err){
-    statusEl.textContent = "❌ 讀取影片清單失敗：" + err.message;
-    statusEl.className = "sync-status err";
-  }
-}
-async function saveOwnershipVideoLinks(){
-  const statusEl = document.getElementById("ownershipVideoSyncStatus");
-  if(APPS_SCRIPT_URL.startsWith("YOUR_")){
-    statusEl.textContent = "⚠ 尚未設定 APPS_SCRIPT_URL，清單僅顯示於畫面上，未寫入 Google 試算表。";
-    statusEl.className = "sync-status err";
-    return;
-  }
-  statusEl.textContent = "同步中...";
-  statusEl.className = "sync-status";
-  try{
-    const params = new URLSearchParams({ action: "setSetting", key: OWNERSHIP_VIDEO_KEY, value: JSON.stringify(ownershipVideos) });
-    const res = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
-    const data = await res.json();
-    if(!res.ok || data.status !== "ok"){ throw new Error(data.message || ("HTTP " + res.status)); }
-    statusEl.textContent = "✅ 已同步至 Google 試算表";
-    statusEl.className = "sync-status ok";
-  }catch(err){
-    statusEl.textContent = "❌ 寫入 Google 試算表失敗：" + err.message;
-    statusEl.className = "sync-status err";
-  }
-}
-function removeOwnershipVideo(idx){
-  ownershipVideos.splice(idx, 1);
-  renderOwnershipVideoList();
-  saveOwnershipVideoLinks();
-}
-document.getElementById("ownershipVideoAddBtn").addEventListener("click", () => {
-  const nameInput = document.getElementById("ownershipVideoNameInput");
-  const urlInput = document.getElementById("ownershipVideoUrlInput");
-  const name = nameInput.value.trim();
-  const url = urlInput.value.trim();
-  if(!url) return;
-  ownershipVideos.push({ name: name || `影片 ${ownershipVideos.length + 1}`, url });
-  nameInput.value = "";
-  urlInput.value = "";
-  renderOwnershipVideoList();
-  saveOwnershipVideoLinks();
-});
-document.getElementById("ownershipVideoUrlInput").addEventListener("keydown", (e) => {
-  if(e.key === "Enter"){
-    e.preventDefault();
-    document.getElementById("ownershipVideoAddBtn").click();
-  }
-});
-renderOwnershipVideoList();
-loadOwnershipVideoLinks();
 </script>
 </body>
 </html>
